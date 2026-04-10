@@ -345,7 +345,7 @@ tbody tr:hover td{background:rgba(255,255,255,.03);}
 </head>
 <body>
 <div id="app">
-  <div class="ldf"><div class="sp"></div><div style="color:var(--mut);font-size:13px;">Iniciando Knox Ventas...</div></div>
+  <div class="ldf"><div class="sp"></div><div style="color:var(--txt3);font-size:13px;">Iniciando Knox Ventas...</div></div>
 </div>
 
 
@@ -501,7 +501,7 @@ function rLogin(){
   '<input class="fi" id="lem" type="email" placeholder="tu@email.com" autocomplete="email"></div>'+
   '<div class="fg"><label class="fl">CONTRASEÑA</label>'+
   '<input class="fi" id="lps" type="password" placeholder="••••••••" autocomplete="current-password"></div>'+
-  '<button class="btn bp" id="lbtn" style="width:100%;justify-content:center;padding:12px;">🔐 Iniciar Sesión</button>'+
+  '<button class="btn bp" id="lbtn" style="width:100%;justify-content:center;padding:12px;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Iniciar Sesión</button>'+
   '</div></div>';
 }
 function bLogin(){
@@ -517,11 +517,11 @@ function bLogin(){
         cargar().then(R);
       }else{
         ee.innerHTML='<div class="al alr">⚠️ '+((res&&(res.error_description||res.error))||'Credenciales incorrectas')+'</div>';
-        btn.textContent='🔐 Iniciar Sesión';btn.disabled=false;
+        btn.textContent='Iniciar Sesión';btn.disabled=false;
       }
     }).catch(function(e){
       ee.innerHTML='<div class="al alr">⚠️ '+e.message+'</div>';
-      btn.textContent='🔐 Iniciar Sesión';btn.disabled=false;
+      btn.textContent='Iniciar Sesión';btn.disabled=false;
     });
   };
   document.getElementById('lbtn').onclick=go;
@@ -564,12 +564,25 @@ function cargarFacs(){
   }).catch(function(){S.fcs=[];S.dets={};});
 }
 
+// ── ICONOS SVG INLINE (estilo CustomerControl) ─────────────────
+var ICO={
+  dash:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  facs:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+  cls: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+  mor: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  rank:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  // Topbar icons
+  out: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  xl:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="8 13 10.5 18 13 13"/><line x1="8" y1="18" x2="13" y2="13"/></svg>',
+  ham: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+};
+
 // ── APP SHELL ─────────────────────────────────────────────────
 function rApp(){
   var pend=S.fcs.filter(function(f){return f.estado==='Pendiente';}).length;
-  var nav=[{id:'dash',i:'📊',l:'Dashboard'},{id:'facs',i:'🧾',l:'Facturas',b:pend||null},
-           {id:'cls',i:'👥',l:'Clientes'},{id:'mor',i:'⚠️',l:'Morosidad'},{id:'rank',i:'🏆',l:'Ranking'}];
-  var titles={dash:'📊 Dashboard',facs:'🧾 Facturas',cls:'👥 Clientes',mor:'⚠️ Morosidad',rank:'🏆 Ranking'};
+  var nav=[{id:'dash',i:ICO.dash,l:'Dashboard'},{id:'facs',i:ICO.facs,l:'Facturas',b:pend||null},
+           {id:'cls',i:ICO.cls,l:'Clientes'},{id:'mor',i:ICO.mor,l:'Morosidad'},{id:'rank',i:ICO.rank,l:'Ranking'}];
+  var titles={dash:'Dashboard',facs:'Facturas',cls:'Clientes',mor:'Morosidad',rank:'Ranking'};
   var conts={dash:rDash(),facs:rFacs(),cls:rCls(),mor:rMor(),rank:rRank()};
   var ini=S.user.n.substring(0,2).toUpperCase();
   var pers=periodos();
@@ -578,18 +591,26 @@ function rApp(){
   '<div class="sb'+(S.sbOpen?' open':'')+'" id="sidebar">'+
   '<div class="logo-bar">'+LOGO_MINI+
   '<div><div class="logo-name">Knox<span> Ventas</span></div><div class="logo-by">GPS MONITORING</div></div></div>'+
-  '<nav>'+nav.map(function(n){return '<div class="ni'+(S.sec===n.id?' on':'')+'" data-sec="'+n.id+'"><span class="ni-ico-wrap">'+n.i+'</span><span class="ni-label">'+n.l+'</span>'+(n.b?'<span class="nb">'+n.b+'</span>':'')+'</div>';}).join('')+'</nav>'+
+  '<nav>'+nav.map(function(n){
+    return '<div class="ni'+(S.sec===n.id?' on':'')+'" data-sec="'+n.id+'">'+
+    '<span class="ni-ico-wrap">'+n.i+'</span>'+
+    '<span class="ni-label">'+n.l+'</span>'+
+    (n.b?'<span class="nb">'+n.b+'</span>':'')+
+    '</div>';
+  }).join('')+'</nav>'+
   '<div class="sbf"><div class="sb-user"><div class="av" style="position:relative;">'+ini+'<span class="online-dot"></span></div>'+
   '<div class="sb-user-info"><div class="sb-user-name">'+esc(S.user.n)+'</div>'+
   '<div class="sb-user-role">Administrador</div></div></div></div></div>'+
   '<div class="main">'+
   '<div class="topbar">'+
   '<div style="display:flex;align-items:center;gap:10px;">'+
-  '<button class="hamburger" id="ham">☰</button>'+
-  '<div><div class="tb-t">'+titles[S.sec]+'</div><div class="tb-s"><span class="pls"></span> Datos reales · Supabase</div></div></div>'+
+  '<button class="hamburger" id="ham">'+ICO.ham+'</button>'+
+  '<div><div class="tb-t">'+titles[S.sec]+'</div>'+
+  '<div class="tb-s"><span class="pls"></span> Datos reales · Supabase</div></div></div>'+
   '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+
   (S.sec!=='rank'?'<select class="sel" id="psel">'+pers.map(function(p){return '<option value="'+p+'"'+(p===S.per?' selected':'')+'>'+ml(p)+' ('+p+')</option>';}).join('')+'</select>':'')+
-  '<button class="btn-salir" id="btnOut"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Salir</button>'+
+  '<button class="btn bg bsm" id="btnXL" title="Exportar Excel del período">'+ICO.xl+' Excel</button>'+
+  '<button class="btn-salir" id="btnOut">'+ICO.out+' Salir</button>'+
   '</div></div>'+
   '<div class="content">'+(conts[S.sec]||'')+'</div></div></div>'+
   (S.modal?rModal():'')+
@@ -629,18 +650,23 @@ function calcSvc(){
 function rDash(){
   var k=calcK();var svc=calcSvc();
   var svcs=S.svcs.length?S.svcs:SVCS_DEF;
+  var icoFact='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>';
+  var icoCob='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var icoPend='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  var icoPct='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
+  var icoMast='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>';
   return '<div class="kgrid">'+
-  kc('💰','Total Facturado',fmt(k.tot),k.totF+' facturas','','kc-blue')+
-  kc('✅','Cobrado',fmt(k.cob),k.pag+' pagadas','','kc-green')+
-  kc('⏳','Por Cobrar',fmt(k.pend),(k.totF-k.pag)+' pendientes','','kc-yellow')+
-  kc('📊','% Pago',k.pct+'%','fecha emisión','',k.pct>=75?'kc-green':k.pct>=50?'kc-yellow':'kc-red')+
-  kc('🔥','Nuevos Masters',k.nm,ml(S.per),'','kc-purple')+'</div>'+
+  kc(icoFact,'Total Facturado',fmt(k.tot),k.totF+' facturas','','kc-blue')+
+  kc(icoCob,'Cobrado',fmt(k.cob),k.pag+' pagadas','','kc-green')+
+  kc(icoPend,'Por Cobrar',fmt(k.pend),(k.totF-k.pag)+' pendientes','','kc-yellow')+
+  kc(icoPct,'% Pago',k.pct+'%','fecha emisión','',k.pct>=75?'kc-green':k.pct>=50?'kc-yellow':'kc-red')+
+  kc(icoMast,'Nuevos Masters',k.nm,ml(S.per),'','kc-purple')+'</div>'+
   '<div class="g2">'+
   '<div class="card"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--acc)"></div>Resumen '+ml(S.per)+'</div><span class="cbadge">'+k.totF+' fact.</span></div><div style="position:relative;height:190px;"><canvas id="cbar"></canvas></div></div>'+
   '<div class="card"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--grn)"></div>Estado</div></div><div style="position:relative;height:160px;"><canvas id="cdon"></canvas></div>'+
   '<div style="display:flex;justify-content:center;gap:18px;margin-top:8px;">'+
-  '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--grn);">'+k.pag+'</div><div style="font-size:10px;color:var(--mut);">Pagadas</div></div>'+
-  '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--red);">'+(k.totF-k.pag)+'</div><div style="font-size:10px;color:var(--mut);">Pendientes</div></div>'+
+  '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--grn);">'+k.pag+'</div><div style="font-size:10px;color:var(--txt3);">Pagadas</div></div>'+
+  '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--red);">'+(k.totF-k.pag)+'</div><div style="font-size:10px;color:var(--txt3);">Pendientes</div></div>'+
   '</div></div></div>'+
   '<div class="card"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--ylw)"></div>Servicios vendidos — '+ml(S.per)+'</div></div>'+
   '<div class="sg">'+svcs.map(function(s){
@@ -667,26 +693,26 @@ function rFacs(){
   var f=S.fcs.slice();
   if(S.mFiltro!=='todas')f=f.filter(function(x){return x.estado===S.mFiltro;});
   var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
-  '<button class="btn bp bsm" id="btnNM">🔁 Mensual</button>'+
-  '<button class="btn bpur bsm" id="btnND">⚡ Directa</button>'+
+  '<button class="btn bp bsm" id="btnNM"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Mensual</button>'+
+  '<button class="btn bpur bsm" id="btnND"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Directa</button>'+
   '<div style="flex:1;min-width:20px;"></div>'+
-  ['todas','Pagada','Pendiente'].map(function(s){return '<button class="btn bsm '+(S.mFiltro===s?'bp':'bg')+'" data-filtro="'+s+'">'+(s==='todas'?'📋 Todas':s==='Pagada'?'✅ Pagadas':'⏳ Pendientes')+'</button>';}).join('')+'</div>';
-  var vacio='<tr><td colspan="9" style="text-align:center;color:var(--mut);padding:26px;">Sin facturas en este período</td></tr>';
+  ['todas','Pagada','Pendiente'].map(function(s){return '<button class="btn bsm '+(S.mFiltro===s?'bp':'bg')+'" data-filtro="'+s+'">'+(s==='todas'?'Todas':s==='Pagada'?'Pagadas':'Pendientes')+'</button>';}).join('')+'</div>';
+  var vacio='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:26px;">Sin facturas en este período</td></tr>';
   var filas=f.length===0?vacio:f.map(function(fc){
     var cl=fc.clientes||(cm[fc.cliente_id])||{nombre:'—',empresa:''};
-    var comp=fc.url_comprobante?'<button class="compbtn" data-lb="'+esc(fc.url_comprobante)+'">🖼️ Ver</button>':'<span style="font-size:11px;color:var(--mut);">—</span>';
+    var comp=fc.url_comprobante?'<button class="compbtn" data-lb="'+esc(fc.url_comprobante)+'">🖼️ Ver</button>':'<span style="font-size:11px;color:var(--txt3);">—</span>';
     return '<tr>'+
     '<td><span style="font-family:monospace;font-size:11px;color:var(--acc);">'+esc(fc.numero_factura)+'</span></td>'+
-    '<td><div style="font-weight:700;">'+esc(cl.nombre||'—')+'</div><div style="font-size:11px;color:var(--mut);">'+esc(cl.empresa||'')+'</div></td>'+
-    '<td><span class="chip '+(fc.tipo_factura==='Mensual'?'cb':'cp')+'">'+(fc.tipo_factura==='Mensual'?'🔁 Mensual':'⚡ Directa')+'</span></td>'+
+    '<td><div style="font-weight:700;">'+esc(cl.nombre||'—')+'</div><div style="font-size:11px;color:var(--txt3);">'+esc(cl.empresa||'')+'</div></td>'+
+    '<td><span class="chip '+(fc.tipo_factura==='Mensual'?'cb':'cp')+'">'+(fc.tipo_factura==='Mensual'?'Mensual':'Directa')+'</span></td>'+
     '<td style="font-family:monospace;font-size:12px;">'+esc(fc.fecha_emision)+'</td>'+
     '<td><span class="chip cb" style="font-size:10px;">'+esc(fc.periodo_servicio)+'</span></td>'+
     '<td><span style="font-weight:800;color:var(--acc);">'+fmt(fc.total)+'</span></td>'+
-    '<td><span class="chip '+(fc.estado==='Pagada'?'cg':'cy')+'">'+(fc.estado==='Pagada'?'✅ Pagada':'⏳ Pendiente')+'</span>'+(fc.fecha_pago?'<div style="font-size:10px;color:var(--mut);margin-top:2px;">Pago: '+esc(fc.fecha_pago)+'</div>':'')+'</td>'+
+    '<td><span class="chip '+(fc.estado==='Pagada'?'cg':'cy')+'">'+(fc.estado==='Pagada'?'Pagada':'Pendiente')+'</span>'+(fc.fecha_pago?'<div style="font-size:10px;color:var(--txt3);margin-top:2px;">Pago: '+esc(fc.fecha_pago)+'</div>':'')+'</td>'+
     '<td>'+comp+'</td>'+
     '<td><div style="display:flex;gap:4px;flex-wrap:wrap;">'+
-    (fc.estado==='Pendiente'?'<button class="btn bgrn bsm" data-pagar="'+fc.id+'">💳 Pagar</button>':'')+
-    '<button class="btn bg bsm" data-ver="'+fc.id+'">🔍</button>'+
+    (fc.estado==='Pendiente'?'<button class="btn bgrn bsm" data-pagar="'+fc.id+'">Pagar</button>':'')+
+    '<button class="btn bg bsm" data-ver="'+fc.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>'+
     '</div></td></tr>';
   }).join('');
   return btns+'<div class="card tbl-wrap"><table><thead><tr>'+
@@ -700,19 +726,19 @@ function rCls(){
   var cl=S.cls.filter(function(c){return !c.es_general;});
   if(S.cFiltro!=='todos')cl=cl.filter(function(c){return c.estado===S.cFiltro;});
   var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
-  '<button class="btn bp bsm" id="btnNC">👤 Nuevo Cliente</button><div style="flex:1;"></div>'+
-  ['todos','Activo','Suspendido'].map(function(s){return '<button class="btn bsm '+(S.cFiltro===s?'bp':'bg')+'" data-cf="'+s+'">'+(s==='todos'?'👥 Todos':s==='Activo'?'✅ Activos':'🚫 Suspendidos')+'</button>';}).join('')+'</div>';
-  var vacio='<tr><td colspan="8" style="text-align:center;color:var(--mut);padding:26px;">Sin clientes</td></tr>';
+  '<button class="btn bp bsm" id="btnNC"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="3" x2="12" y2="1"/><line x1="14.12" y1="3.88" x2="15.54" y2="2.46"/></svg> Nuevo Cliente</button><div style="flex:1;"></div>'+
+  ['todos','Activo','Suspendido'].map(function(s){return '<button class="btn bsm '+(S.cFiltro===s?'bp':'bg')+'" data-cf="'+s+'">'+(s==='todos'?'Todos':s==='Activo'?'Activos':'Suspendidos')+'</button>';}).join('')+'</div>';
+  var vacio='<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:26px;">Sin clientes</td></tr>';
   var filas=cl.length===0?vacio:cl.map(function(c){
     var d=deuda(c.id);
-    var dColor=c.estado==='Suspendido'?'var(--mut)':'var(--red)';
+    var dColor=c.estado==='Suspendido'?'var(--txt3)':'var(--red)';
     return '<tr>'+
     '<td style="font-weight:700;">'+esc(c.nombre)+'</td><td>'+esc(c.empresa||'—')+'</td>'+
-    '<td style="font-size:12px;color:var(--mut);">'+esc(c.email||'—')+'</td>'+
+    '<td style="font-size:12px;color:var(--txt3);">'+esc(c.email||'—')+'</td>'+
     '<td style="font-family:monospace;font-size:12px;">'+esc(c.telefono||'—')+'</td>'+
-    '<td><span class="chip '+(c.estado==='Activo'?'cg':'cr')+'">'+(c.estado==='Activo'?'✅ Activo':'🚫 Suspendido')+'</span></td>'+
+    '<td><span class="chip '+(c.estado==='Activo'?'cg':'cr')+'">'+(c.estado==='Activo'?'Activo':'Suspendido')+'</span></td>'+
     '<td>'+(d>0?'<span style="font-weight:800;color:'+dColor+';">'+fmt(d)+'</span>':'<span style="color:var(--grn);font-weight:600;">Sin deuda</span>')+'</td>'+
-    '<td style="font-family:monospace;font-size:11px;color:var(--mut);">'+(c.creado_en||'').substring(0,10)+'</td>'+
+    '<td style="font-family:monospace;font-size:11px;color:var(--txt3);">'+(c.creado_en||'').substring(0,10)+'</td>'+
     '<td><div style="display:flex;gap:4px;"><button class="btn bg bsm" data-edit="'+c.id+'">✏️</button>'+
     '<button class="btn bg bsm" data-del="'+c.id+'" style="color:var(--red);">🗑️</button></div></td></tr>';
   }).join('');
@@ -735,11 +761,11 @@ function rMor(){
   var ds=function(id){return S.fcs.filter(function(f){return f.cliente_id===id&&f.estado==='Pendiente';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);};
   var mr=mk.length===0?'<tr><td colspan="5" style="text-align:center;color:var(--grn);font-weight:700;padding:22px;">🎉 Sin morosidad</td></tr>':
   mk.map(function(k){var m=mor[k];return '<tr><td style="font-weight:700;">'+esc(m.c.nombre)+'</td><td>'+esc(m.c.empresa||'—')+'</td><td><span class="chip cy">'+m.fcs.length+'</span></td><td><span style="font-weight:800;color:var(--red);">'+fmt(m.tot)+'</span></td><td><span class="chip '+(m.tot>10000?'cr':m.tot>5000?'cy':'cb')+'">'+(m.tot>10000?'🔴 Alto':m.tot>5000?'🟡 Medio':'🟢 Bajo')+'</span></td></tr>';}).join('');
-  var sr=susp.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:14px;">Sin clientes suspendidos</td></tr>':
-  susp.map(function(c){return '<tr><td>'+esc(c.nombre)+'</td><td>'+esc(c.empresa||'—')+'</td><td style="font-weight:700;color:var(--mut);">'+fmt(ds(c.id))+'</td><td><span class="chip cr">🚫</span></td></tr>';}).join('');
+  var sr=susp.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:14px;">Sin clientes suspendidos</td></tr>':
+  susp.map(function(c){return '<tr><td>'+esc(c.nombre)+'</td><td>'+esc(c.empresa||'—')+'</td><td style="font-weight:700;color:var(--txt3);">'+fmt(ds(c.id))+'</td><td><span class="chip cr">🚫</span></td></tr>';}).join('');
   return '<div class="card tbl-wrap" style="margin-bottom:14px;"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--red)"></div>⚠️ Morosos — '+ml(S.per)+'</div><span class="chip cr">'+mk.length+'</span></div>'+
   '<table><thead><tr>'+['Cliente','Empresa','Pend.','Deuda','Riesgo'].map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+mr+'</tbody></table></div>'+
-  '<div class="card tbl-wrap"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--mut)"></div>🚫 Suspendidos</div></div>'+
+  '<div class="card tbl-wrap"><div class="ch"><div class="ct"><div class="cdot" style="background:var(--txt3)"></div>🚫 Suspendidos</div></div>'+
   '<div class="al aly">⚠️ No afectan métricas de morosidad</div>'+
   '<table><thead><tr>'+['Cliente','Empresa','Deuda',''].map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+sr+'</tbody></table></div>';
 }
@@ -753,16 +779,16 @@ function rRank(){
     var pct=tot>0?Math.round(pag*100/tot):0;
     return{c:c,tot:tot,pag:pag,pct:pct};
   }).sort(function(a,b){return b.pct-a.pct;});
-  var ri=ranking.length===0?'<div style="text-align:center;padding:22px;color:var(--mut);">Sin datos</div>':
+  var ri=ranking.length===0?'<div style="text-align:center;padding:22px;color:var(--txt3);">Sin datos</div>':
   ranking.map(function(r,i){var col=r.pct>=80?'var(--grn)':r.pct>=50?'var(--ylw)':'var(--red)';
     return '<div class="rr"><div class="rn'+(i<3?' top':'')+'">'+(i+1)+'</div>'+
-    '<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;">'+esc(r.c.nombre)+'</div><div style="font-size:11px;color:var(--mut);">'+esc(r.c.empresa||'')+'</div>'+
+    '<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;">'+esc(r.c.nombre)+'</div><div style="font-size:11px;color:var(--txt3);">'+esc(r.c.empresa||'')+'</div>'+
     '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;"><div class="pb"><div class="pf" style="width:'+r.pct+'%;background:'+col+';"></div></div><span style="font-size:11px;font-weight:700;color:'+col+';">'+r.pct+'%</span></div></div>'+
-    '<div style="text-align:right;"><div style="font-weight:800;font-size:13px;color:var(--acc);">'+fmt(r.pag)+'</div><div style="font-size:10px;color:var(--mut);">de '+fmt(r.tot)+'</div></div></div>';
+    '<div style="text-align:right;"><div style="font-weight:800;font-size:13px;color:var(--acc);">'+fmt(r.pag)+'</div><div style="font-size:10px;color:var(--txt3);">de '+fmt(r.tot)+'</div></div></div>';
   }).join('');
   var ia=ranking.filter(function(r){return r.pct<60;});
   var iH=ia.length===0?'<div style="text-align:center;padding:22px;color:var(--grn);font-weight:700;">✨ Todos con buen historial</div>':
-  ia.map(function(r){return '<div class="pred"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">'+esc(r.c.nombre)+'</div><div style="font-size:11px;color:var(--mut);">'+esc(r.c.empresa||'')+'</div></div><span class="chip cr">'+r.pct+'%</span></div><div style="font-size:12px;color:var(--mut);margin-top:7px;">'+(r.pct<30?'🔴 Alto riesgo':r.pct<50?'🟡 Riesgo moderado':'🔵 Riesgo leve')+'</div></div>';}).join('');
+  ia.map(function(r){return '<div class="pred"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:700;font-size:13px;">'+esc(r.c.nombre)+'</div><div style="font-size:11px;color:var(--txt3);">'+esc(r.c.empresa||'')+'</div></div><span class="chip cr">'+r.pct+'%</span></div><div style="font-size:12px;color:var(--txt3);margin-top:7px;">'+(r.pct<30?'🔴 Alto riesgo':r.pct<50?'🟡 Riesgo moderado':'🔵 Riesgo leve')+'</div></div>';}).join('');
   return '<div class="g2"><div class="card"><div class="ch"><div class="ct">🏆 Ranking</div></div>'+ri+'</div><div class="card"><div class="ch"><div class="ct">🤖 Predicción IA</div></div>'+iH+'</div></div>';
 }
 
@@ -813,10 +839,10 @@ function rMFac(){
   '</select></div>'+
   '<div class="fg"><label class="fl">Fecha de Emisión</label>'+
   '<input class="fi" type="date" id="mfFe" value="'+esc(f.fe)+'"></div></div>'+
-  '<div style="font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Servicios / Detalles</div>'+
+  '<div style="font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Servicios / Detalles</div>'+
   rows+
   '<button class="btn bg bsm" id="addDet" style="margin-bottom:14px;width:100%;justify-content:center;">+ Agregar línea</button>'+
-  '<div class="tot-box"><span style="font-size:12px;color:var(--mut);font-weight:700;">TOTAL ESTIMADO</span>'+
+  '<div class="tot-box"><span style="font-size:12px;color:var(--txt3);font-weight:700;">TOTAL ESTIMADO</span>'+
   '<span id="totalDisp" style="font-size:24px;font-weight:800;color:var(--acc);">'+fmt(tot)+'</span></div>'+
   '<div class="fa"><button class="btn bg" id="moCan">Cancelar</button>'+
   '<button class="btn bp" id="moSave">💾 Guardar Factura</button></div>'+
@@ -829,19 +855,19 @@ function rMPag(){
   return '<div class="mb" id="mbg"><div class="mo" style="max-width:480px;">'+
   '<div class="mo-t">💳 Registrar Pago</div>'+
   '<div style="background:var(--surf2);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--brd);">'+
-  '<div><div style="font-size:11px;color:var(--mut);">Factura</div>'+
+  '<div><div style="font-size:11px;color:var(--txt3);">Factura</div>'+
   '<div style="font-weight:800;font-size:14px;color:var(--acc);">'+esc(f.numero_factura)+'</div>'+
-  '<div style="font-size:11px;color:var(--mut);margin-top:2px;">Período: <b style="color:var(--ylw);">'+esc(f.periodo_servicio)+'</b></div></div>'+
-  '<div style="text-align:right;"><div style="font-size:11px;color:var(--mut);">Total</div>'+
+  '<div style="font-size:11px;color:var(--txt3);margin-top:2px;">Período: <b style="color:var(--ylw);">'+esc(f.periodo_servicio)+'</b></div></div>'+
+  '<div style="text-align:right;"><div style="font-size:11px;color:var(--txt3);">Total</div>'+
   '<div style="font-size:24px;font-weight:800;color:var(--grn);">'+fmt(f.total)+'</div></div></div>'+
   '<div class="fg"><label class="fl">📅 Fecha de Pago</label>'+
   '<input class="fi" type="date" id="pFe" value="'+S.pFecha+'"></div>'+
-  '<div class="fg"><label class="fl">🖼️ Comprobante <span style="font-weight:400;color:var(--mut);">(opcional)</span></label>'+
+  '<div class="fg"><label class="fl">🖼️ Comprobante <span style="font-weight:400;color:var(--txt3);">(opcional)</span></label>'+
   (prev?'<div class="cpv"><img src="'+esc(prev)+'" alt="preview"><div class="cpvb"><span class="cpvn">📎 '+esc(S.pFileName)+'</span><button class="cpvx" id="remComp">✕ Quitar</button></div></div>':
   '<div class="uz" id="uzn"><input type="file" id="cmpFile" accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf">'+
   '<span style="font-size:26px;display:block;margin-bottom:7px;">📷</span>'+
-  '<div style="font-size:13px;color:var(--mut);"><b style="color:var(--acc);">Clic aquí</b> o arrastra la imagen</div>'+
-  '<div style="font-size:11px;color:var(--mut);margin-top:3px;">PNG · JPG · PDF · máx 10MB</div></div>')+
+  '<div style="font-size:13px;color:var(--txt3);"><b style="color:var(--acc);">Clic aquí</b> o arrastra la imagen</div>'+
+  '<div style="font-size:11px;color:var(--txt3);margin-top:3px;">PNG · JPG · PDF · máx 10MB</div></div>')+
   '</div>'+
   '<div class="al aly">⚠️ El período <b>'+esc(f.periodo_servicio)+'</b> no cambia (regla contable de fecha de emisión).</div>'+
   '<div class="fa"><button class="btn bg" id="moCan">Cancelar</button>'+
@@ -872,7 +898,7 @@ function rMDet(){
   var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
   var cl=fac.clientes||(cm[fac.cliente_id])||{nombre:'—',empresa:''};
   var dets=S.dets[fac.id]||[];
-  var dRows=dets.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:14px;">Sin detalles</td></tr>':
+  var dRows=dets.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:14px;">Sin detalles</td></tr>':
   dets.map(function(d){
     var sNom=d.servicios&&d.servicios.nombre?d.servicios.nombre:'—';
     return '<tr><td style="font-weight:600;">'+esc(sNom)+'</td>'+
@@ -885,27 +911,27 @@ function rMDet(){
   '<div class="det-fac-hdr">'+
   '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">'+
   '<div>'+
-  '<div style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">N° Factura</div>'+
+  '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">N° Factura</div>'+
   '<div style="font-weight:800;font-size:16px;color:var(--acc);">'+esc(fac.numero_factura)+'</div>'+
   '<div style="margin-top:10px;">'+
-  '<div style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Cliente</div>'+
+  '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Cliente</div>'+
   '<div style="font-weight:700;font-size:14px;">'+esc(cl.nombre)+'</div>'+
-  (cl.empresa?'<div style="font-size:12px;color:var(--mut);">'+esc(cl.empresa)+'</div>':'')+
+  (cl.empresa?'<div style="font-size:12px;color:var(--txt3);">'+esc(cl.empresa)+'</div>':'')+
   '</div></div>'+
   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">'+
   '<span class="chip '+(fac.tipo_factura==='Mensual'?'cb':'cp')+'">'+(fac.tipo_factura==='Mensual'?'🔁 Mensual':'⚡ Directa')+'</span>'+
   '<span class="chip '+(fac.estado==='Pagada'?'cg':'cy')+'">'+(fac.estado==='Pagada'?'✅ Pagada':'⏳ Pendiente')+'</span>'+
-  '<div style="font-size:11px;color:var(--mut);">Emisión: '+esc(fac.fecha_emision)+'</div>'+
-  '<div style="font-size:11px;color:var(--mut);">Período: '+esc(fac.periodo_servicio)+'</div>'+
+  '<div style="font-size:11px;color:var(--txt3);">Emisión: '+esc(fac.fecha_emision)+'</div>'+
+  '<div style="font-size:11px;color:var(--txt3);">Período: '+esc(fac.periodo_servicio)+'</div>'+
   (fac.fecha_pago?'<div style="font-size:11px;color:var(--grn);font-weight:600;">✅ Pagado: '+esc(fac.fecha_pago)+'</div>':'')+
   '</div></div></div>'+
   '<table class="det-fac-table">'+
   '<thead><tr>'+['Servicio','Cant.','Precio Unit.','Subtotal'].map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead>'+
   '<tbody>'+dRows+'</tbody>'+
-  '<tfoot><tr class="det-tot"><td colspan="3" style="text-align:right;font-weight:700;padding:11px 10px;color:var(--mut);font-size:12px;">TOTAL:</td>'+
+  '<tfoot><tr class="det-tot"><td colspan="3" style="text-align:right;font-weight:700;padding:11px 10px;color:var(--txt3);font-size:12px;">TOTAL:</td>'+
   '<td style="padding:11px 10px;font-weight:800;font-size:18px;color:var(--acc);">'+fmt(fac.total)+'</td></tr></tfoot>'+
   '</table>'+
-  (fac.url_comprobante?'<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--brd);"><div style="font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Comprobante</div><button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'">🖼️ Ver comprobante</button></div>':'')+
+  (fac.url_comprobante?'<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--brd);"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Comprobante</div><button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'">🖼️ Ver comprobante</button></div>':'')+
   '<div class="fa"><button class="btn bp" id="moCan">Cerrar</button></div>'+
   '</div></div>';
 }
@@ -916,11 +942,11 @@ function initCharts(){
   ['cbar','cdon'].forEach(function(id){var el=document.getElementById(id);if(el){var i=Chart.getChart(el);if(i)i.destroy();}});
   var k=calcK();
   var cb=document.getElementById('cbar');
-  if(cb)new Chart(cb,{type:'bar',data:{labels:['Facturado','Cobrado','Pendiente'],datasets:[{data:[k.tot,k.cob,k.pend],backgroundColor:['rgba(0,229,255,.7)','rgba(0,200,83,.7)','rgba(255,215,64,.7)'],borderRadius:6,barThickness:50}]},
+  if(cb)new Chart(cb,{type:'bar',data:{labels:['Facturado','Cobrado','Pendiente'],datasets:[{data:[k.tot,k.cob,k.pend],backgroundColor:['rgba(59,130,246,.8)','rgba(34,197,94,.8)','rgba(245,158,11,.8)'],borderRadius:6,barThickness:50}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return 'RD$'+Math.round(c.parsed.y).toLocaleString();}}}},
   scales:{x:{grid:{color:'rgba(26,45,80,.4)'},ticks:{color:'#94a3b8',font:{size:12}}},y:{grid:{color:'rgba(26,45,80,.4)'},ticks:{color:'#94a3b8',font:{size:10},callback:function(v){return 'RD$'+v.toLocaleString();}}}}}});
   var cd=document.getElementById('cdon');
-  if(cd)new Chart(cd,{type:'doughnut',data:{labels:['Pagadas','Pendientes'],datasets:[{data:[k.pag||0,(k.totF-k.pag)||0],backgroundColor:['#00c853','#ff1744'],borderWidth:0,hoverOffset:4}]},
+  if(cd)new Chart(cd,{type:'doughnut',data:{labels:['Pagadas','Pendientes'],datasets:[{data:[k.pag||0,(k.totF-k.pag)||0],backgroundColor:['#22c55e','#ef4444'],borderWidth:0,hoverOffset:4}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false}}}});
 }
 
@@ -959,6 +985,8 @@ function bApp(){
   if(psel)psel.onchange=function(){S.per=psel.value;cargarFacs().then(R).catch(R);};
   var bo=document.getElementById('btnOut');
   if(bo)bo.onclick=function(){S.tok=null;S.user=null;S.cls=[];S.fcs=[];S.svcs=[];S.dets={};R();};
+  var bxl=document.getElementById('btnXL');
+  if(bxl)bxl.onclick=function(){exportarExcel();};
   document.querySelectorAll('[data-filtro]').forEach(function(b){b.onclick=function(){S.mFiltro=b.dataset.filtro;R();};});
   document.querySelectorAll('[data-cf]').forEach(function(b){b.onclick=function(){S.cFiltro=b.dataset.cf;R();};});
   var bnm=document.getElementById('btnNM');
@@ -1062,6 +1090,192 @@ function bModal(){
       p.then(function(){return DB.get('clientes');}).then(function(d){S.cls=d||[];S.modal=null;S.toast={m:S.editC?'✅ Cliente actualizado':'✅ Cliente creado',c:'var(--grn)'};R();}).catch(function(e){alert('Error: '+e.message);save.textContent='💾 Guardar';save.disabled=false;});
     };
   }
+}
+
+// ── EXPORTAR EXCEL ────────────────────────────────────────────
+// Genera un archivo .xls con todas las secciones del dashboard
+// usando el formato XML Spreadsheet compatible con Excel
+function exportarExcel(){
+  var k=calcK();
+  var svc=calcSvc();
+  var svcs=S.svcs.length?S.svcs:SVCS_DEF;
+  var periodo=ml(S.per)+' ('+S.per+')';
+  var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
+
+  // ── Helpers de celda ──
+  function cel(v,t,sty){
+    t=t||'String';sty=sty?'ss:StyleID="'+sty+'"':'';
+    return '<Cell '+sty+'><Data ss:Type="'+t+'">'+(v===null||v===undefined?'':String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</Data></Cell>';
+  }
+  function hd(v){return cel(v,'String','hdr');}
+  function num(v){return cel(v,'Number','num');}
+  function row(){var cells=Array.prototype.slice.call(arguments);return '<Row>'+cells.join('')+'</Row>';}
+  function title(v,cols){return '<Row><Cell ss:MergeAcross="'+(cols-1)+'" ss:StyleID="title"><Data ss:Type="String">'+v+'</Data></Cell></Row>';}
+  function blank(){return '<Row><Cell><Data ss:Type="String"></Data></Cell></Row>';}
+  function pct(v){return cel((v||0).toFixed(1)+'%','String','num');}
+  function money(v){return cel('RD$'+(Math.round(v||0)).toLocaleString('es-DO'),'String','num');}
+
+  // ─────────────────────────────────────────────────────────────
+  // HOJA 1: RESUMEN (Dashboard)
+  // ─────────────────────────────────────────────────────────────
+  var sh1='<Worksheet ss:Name="Resumen '+S.per+'"><Table>'+
+  // Estilos ya definidos — encabezado
+  title('KNOX VENTAS — Resumen del Período: '+periodo,2)+
+  blank()+
+  title('KPIs PRINCIPALES',2)+
+  row(hd('Indicador'),hd('Valor'))+
+  row(cel('Total Facturado'),money(k.tot))+
+  row(cel('Total Cobrado'),money(k.cob))+
+  row(cel('Por Cobrar'),money(k.pend))+
+  row(cel('Total Facturas'),cel(k.totF,'Number'))+
+  row(cel('Facturas Pagadas'),cel(k.pag,'Number'))+
+  row(cel('Facturas Pendientes'),cel(k.totF-k.pag,'Number'))+
+  row(cel('% de Pago'),pct(k.pct))+
+  row(cel('Nuevos Masters'),cel(k.nm,'Number'))+
+  blank()+
+  title('SERVICIOS VENDIDOS EN '+periodo.toUpperCase(),4)+
+  row(hd('Servicio'),hd('Unidades Vendidas'),hd('Total Facturado'),hd('Total Cobrado'))+
+  svcs.map(function(s){
+    var d=svc[s.codigo]||{q:0,tot:0,cob:0};
+    return row(cel(s.nombre),cel(d.q,'Number'),money(d.tot),money(d.cob));
+  }).join('')+
+  '</Table></Worksheet>';
+
+  // ─────────────────────────────────────────────────────────────
+  // HOJA 2: FACTURAS
+  // ─────────────────────────────────────────────────────────────
+  var facRows=S.fcs.map(function(fc){
+    var cl=fc.clientes||(cm[fc.cliente_id])||{nombre:'—',empresa:''};
+    return row(
+      cel(fc.numero_factura),
+      cel(cl.nombre||'—'),
+      cel(cl.empresa||''),
+      cel(fc.tipo_factura),
+      cel(fc.fecha_emision),
+      cel(fc.periodo_servicio),
+      cel(fc.estado),
+      money(fc.total),
+      cel(fc.fecha_pago||''),
+      cel(fc.url_comprobante?'Sí':'No')
+    );
+  }).join('');
+
+  var sh2='<Worksheet ss:Name="Facturas"><Table>'+
+  title('FACTURAS — '+periodo,10)+
+  blank()+
+  row(hd('N° Factura'),hd('Cliente'),hd('Empresa'),hd('Tipo'),hd('Fecha Emisión'),hd('Período'),hd('Estado'),hd('Total'),hd('Fecha Pago'),hd('Comprobante'))+
+  (facRows||row(cel('Sin facturas en este período')))+
+  blank()+
+  row(hd('TOTAL FACTURADO'),money(k.tot))+
+  row(hd('TOTAL COBRADO'),money(k.cob))+
+  row(hd('TOTAL PENDIENTE'),money(k.pend))+
+  '</Table></Worksheet>';
+
+  // ─────────────────────────────────────────────────────────────
+  // HOJA 3: CLIENTES
+  // ─────────────────────────────────────────────────────────────
+  var deudaC=function(id){return S.fcs.filter(function(f){return f.cliente_id===id&&f.estado==='Pendiente';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);};
+  var clRows=S.cls.filter(function(c){return !c.es_general;}).map(function(c){
+    var d=deudaC(c.id);
+    var facC=S.fcs.filter(function(f){return f.cliente_id===c.id;});
+    var totC=facC.reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
+    var pagC=facC.filter(function(f){return f.estado==='Pagada';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
+    var pctC=totC>0?Math.round(pagC*100/totC):0;
+    return row(
+      cel(c.nombre),cel(c.empresa||''),cel(c.email||''),cel(c.telefono||''),
+      cel(c.estado),money(d),cel(pctC+'%'),
+      cel(facC.length,'Number'),money(totC),(c.creado_en||'').substring(0,10)
+    );
+  }).join('');
+
+  var sh3='<Worksheet ss:Name="Clientes"><Table>'+
+  title('CLIENTES — '+periodo,10)+
+  blank()+
+  row(hd('Nombre'),hd('Empresa'),hd('Email'),hd('Teléfono'),hd('Estado'),hd('Deuda Pendiente'),hd('% Cumplimiento'),hd('Total Facturas'),hd('Total Facturado'),hd('Creado'))+
+  (clRows||row(cel('Sin clientes')))+
+  '</Table></Worksheet>';
+
+  // ─────────────────────────────────────────────────────────────
+  // HOJA 4: MOROSIDAD
+  // ─────────────────────────────────────────────────────────────
+  var morData=[];
+  S.fcs.filter(function(f){return f.estado==='Pendiente';}).forEach(function(f){
+    var c=cm[f.cliente_id];if(!c||c.estado!=='Activo'||c.es_general)return;
+    var existing=morData.find(function(m){return m.id===f.cliente_id;});
+    if(existing){existing.fcs++;existing.tot+=parseFloat(f.total)||0;}
+    else morData.push({id:f.cliente_id,nombre:c.nombre,empresa:c.empresa||'',fcs:1,tot:parseFloat(f.total)||0});
+  });
+  morData.sort(function(a,b){return b.tot-a.tot;});
+
+  var sh4='<Worksheet ss:Name="Morosidad"><Table>'+
+  title('MOROSIDAD — '+periodo,5)+
+  blank()+
+  row(hd('Cliente'),hd('Empresa'),hd('Facturas Pendientes'),hd('Total Deuda'),hd('Nivel de Riesgo'))+
+  (morData.length===0?row(cel('Sin morosidad en este período')):
+  morData.map(function(m){
+    var riesgo=m.tot>10000?'ALTO':m.tot>5000?'MEDIO':'BAJO';
+    return row(cel(m.nombre),cel(m.empresa),cel(m.fcs,'Number'),money(m.tot),cel(riesgo));
+  }).join(''))+
+  blank()+
+  row(hd('TOTAL DEUDA MOROSA'),money(morData.reduce(function(s,m){return s+m.tot;},0)))+
+  '</Table></Worksheet>';
+
+  // ─────────────────────────────────────────────────────────────
+  // HOJA 5: RANKING
+  // ─────────────────────────────────────────────────────────────
+  var rankData=S.cls.filter(function(c){return !c.es_general;}).map(function(c){
+    var ff=S.fcs.filter(function(f){return f.cliente_id===c.id;});
+    var tot=ff.reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
+    var pag=ff.filter(function(f){return f.estado==='Pagada';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
+    var pct=tot>0?Math.round(pag*100/tot):0;
+    return{nombre:c.nombre,empresa:c.empresa||'',tot:tot,pag:pag,pend:tot-pag,pct:pct};
+  }).sort(function(a,b){return b.pct-a.pct;});
+
+  var sh5='<Worksheet ss:Name="Ranking Clientes"><Table>'+
+  title('RANKING DE CLIENTES — '+periodo,6)+
+  blank()+
+  row(hd('#'),hd('Cliente'),hd('Empresa'),hd('Total Pagado'),hd('Total Facturado'),hd('% Cumplimiento'))+
+  (rankData.length===0?row(cel('Sin datos')):
+  rankData.map(function(r,i){
+    return row(cel(i+1,'Number'),cel(r.nombre),cel(r.empresa),money(r.pag),money(r.tot),pct(r.pct));
+  }).join(''))+
+  '</Table></Worksheet>';
+
+  // ─────────────────────────────────────────────────────────────
+  // ESTILOS XLS
+  // ─────────────────────────────────────────────────────────────
+  var styles='<Styles>'+
+  '<Style ss:ID="title"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="13" ss:Color="#1e3a5f"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#3b82f6"/></Borders></Style>'+
+  '<Style ss:ID="hdr"><Font ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#93c5fd"/></Borders></Style>'+
+  '<Style ss:ID="num"><Alignment ss:Horizontal="Right"/><Font ss:Size="11"/></Style>'+
+  '</Styles>';
+
+  // ─────────────────────────────────────────────────────────────
+  // ARMAR XML FINAL
+  // ─────────────────────────────────────────────────────────────
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>'+
+  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '+
+  'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" '+
+  'xmlns:x="urn:schemas-microsoft-com:office:excel">'+
+  '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">'+
+  '<Title>Knox Ventas - '+periodo+'</Title>'+
+  '<Author>Knox Ventas by Jefferson Morillo</Author>'+
+  '<Created>'+new Date().toISOString()+'</Created>'+
+  '</DocumentProperties>'+
+  styles+
+  sh1+sh2+sh3+sh4+sh5+
+  '</Workbook>';
+
+  // Descargar
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='KnoxVentas_'+S.per+'.xls';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  S.toast={m:'📊 Excel exportado: KnoxVentas_'+S.per+'.xls',c:'var(--grn)'};
+  R();
 }
 
 window.onload = function(){R();};
