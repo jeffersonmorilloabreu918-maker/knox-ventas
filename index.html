@@ -484,6 +484,7 @@ var S={
   tok:null,user:null,sec:'dash',per:perActual(),
   cls:[],fcs:[],svcs:[],dets:{},
   modal:null,toast:null,mFiltro:'todas',cFiltro:'todos',
+  cSearch:'',fSearch:'',
   fForm:{ci:'',tp:'Mensual',fe:td(),dets:[{si:'',q:'1',p:''}]},
   cForm:{n:'',e:'',em:'',tl:'',st:'Activo'},
   editC:null,pagarF:null,
@@ -732,11 +733,26 @@ function rFacs(){
   var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
   var f=S.fcs.slice();
   if(S.mFiltro!=='todas')f=f.filter(function(x){return x.estado===S.mFiltro;});
-  var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
+  // Filtrar por búsqueda de cliente
+  if(S.fSearch){
+    var q=S.fSearch.toLowerCase();
+    f=f.filter(function(fc){
+      var cl=fc.clientes||(cm[fc.cliente_id])||{};
+      return (cl.email||'').toLowerCase().indexOf(q)>-1||
+             (cl.nombre||'').toLowerCase().indexOf(q)>-1||
+             (fc.numero_factura||'').toLowerCase().indexOf(q)>-1;
+    });
+  }
+  var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">'+
   '<button class="btn bp bsm" id="btnNM"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Mensual</button>'+
   '<button class="btn bpur bsm" id="btnND"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Directa</button>'+
-  '<div style="flex:1;min-width:20px;"></div>'+
-  ['todas','Pagada','Pendiente'].map(function(s){return '<button class="btn bsm '+(S.mFiltro===s?'bp':'bg')+'" data-filtro="'+s+'">'+(s==='todas'?'Todas':s==='Pagada'?'Pagadas':'Pendientes')+'</button>';}).join('')+'</div>';
+  // Buscador por email/cliente
+  '<div style="position:relative;flex:1;min-width:180px;">'+
+  '<input id="facsSearch" class="fi" type="text" placeholder="Buscar por email o cliente..." value="'+esc(S.fSearch||'')+'" style="padding-left:34px;padding-top:6px;padding-bottom:6px;">'+
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'+
+  '</div>'+
+  ['todas','Pagada','Pendiente'].map(function(s){return '<button class="btn bsm '+(S.mFiltro===s?'bp':'bg')+'" data-filtro="'+s+'">'+(s==='todas'?'Todas':s==='Pagada'?'Pagadas':'Pendientes')+'</button>';}).join('')+
+  '</div>';
   var vacio='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:26px;">Sin facturas en este período</td></tr>';
   var filas=f.length===0?vacio:f.map(function(fc){
     var cl=fc.clientes||(cm[fc.cliente_id])||{nombre:'—',empresa:''};
@@ -766,8 +782,23 @@ function rCls(){
   var deuda=function(id){return S.fcs.filter(function(f){return f.cliente_id===id&&f.estado==='Pendiente';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);};
   var cl=S.cls.filter(function(c){return !c.es_general;});
   if(S.cFiltro!=='todos')cl=cl.filter(function(c){return c.estado===S.cFiltro;});
-  var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">'+
-  '<button class="btn bp bsm" id="btnNC"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="3" x2="12" y2="1"/><line x1="14.12" y1="3.88" x2="15.54" y2="2.46"/></svg> Nuevo Cliente</button><div style="flex:1;"></div>'+
+  // Filtrar por búsqueda
+  if(S.cSearch){
+    var q=S.cSearch.toLowerCase();
+    cl=cl.filter(function(c){
+      return (c.email||'').toLowerCase().indexOf(q)>-1||
+             (c.nombre||'').toLowerCase().indexOf(q)>-1||
+             (c.empresa||'').toLowerCase().indexOf(q)>-1||
+             (c.telefono||'').indexOf(q)>-1;
+    });
+  }
+  var btns='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">'+
+  '<button class="btn bp bsm" id="btnNC"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Nuevo Cliente</button>'+
+  // Buscador
+  '<div style="position:relative;flex:1;min-width:180px;">'+
+  '<input id="clsSearch" class="fi" type="text" placeholder="Buscar por email, nombre..." value="'+esc(S.cSearch||'')+'" style="padding-left:34px;padding-top:6px;padding-bottom:6px;">'+
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'+
+  '</div>'+
   ['todos','Activo','Suspendido'].map(function(s){return '<button class="btn bsm '+(S.cFiltro===s?'bp':'bg')+'" data-cf="'+s+'">'+(s==='todos'?'Todos':s==='Activo'?'Activos':'Suspendidos')+'</button>';}).join('')+'</div>';
   var vacio='<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:26px;">Sin clientes</td></tr>';
   var filas=cl.length===0?vacio:cl.map(function(c){
@@ -875,6 +906,9 @@ function rMFac(){
   var mensualCods=['NUEVAS_UNI','RENOV_UNI','SIM_10MB','SIM_20MB','SIM_30MB','SIM_50MB','RSIM_10MB','RSIM_20MB','RSIM_30MB','RSIM_50MB'];
   var svsF=f.tp==='Mensual'?svcs.filter(function(s){return mensualCods.indexOf(s.codigo)>-1;}):svcs;
   var tot=f.dets.reduce(function(s,d){return s+(parseFloat(d.q)||0)*(parseFloat(d.p)||0);},0);
+  // Valor actual del buscador de cliente
+  var searchVal='';
+  if(f.ci){var cc=S.cls.find(function(x){return x.id===+f.ci;});if(cc)searchVal=esc(cc.email||cc.nombre);}
   var rows=f.dets.map(function(d,i){
     var sub=(parseFloat(d.q)||0)*(parseFloat(d.p)||0);
     return '<div class="det-box">'+
@@ -885,9 +919,9 @@ function rMFac(){
     svsF.map(function(s){return '<option value="'+s.id+'"'+(+d.si===s.id?' selected':'')+'>'+esc(s.nombre)+'</option>';}).join('')+
     '</select></div>'+
     '<div><div class="det-lbl">Cantidad</div>'+
-    '<input class="fi" type="number" min="1" id="dq'+i+'" value="'+esc(d.q)+'" placeholder="Ej: 5"></div>'+
+    '<input class="fi" type="number" min="1" id="dq'+i+'" value="'+esc(d.q)+'" placeholder="5"></div>'+
     '<div><div class="det-lbl">Precio unitario RD$</div>'+
-    '<input class="fi" type="number" min="0" step="1" id="dp'+i+'" value="'+esc(d.p)+'" placeholder="Ej: 1200"></div>'+
+    '<input class="fi" type="number" min="0" step="1" id="dp'+i+'" value="'+esc(d.p)+'" placeholder="1200"></div>'+
     '<div style="display:flex;align-items:flex-end;">'+
     '<button class="btn bg bsm" data-drem="'+i+'" style="color:var(--red);padding:8px 9px;">🗑️</button></div>'+
     '</div>'+
@@ -900,11 +934,11 @@ function rMFac(){
   ['Mensual','Directa'].map(function(t){return '<button class="btn bsm '+(f.tp===t?'bp':'bg')+'" data-ftp="'+t+'" style="flex:1;">'+t+'</button>';}).join('')+'</div>'+
   '<div class="fr">'+
   '<div class="fg" style="position:relative;">'+
-  '<label class="fl">Cliente — buscar por email o nombre</label>'+
-  '<input class="fi" id="mfSearch" type="text" placeholder="Escribe email o nombre..." autocomplete="off"'+
-  ' value="'+(f.ci?(function(){var c=S.cls.find(function(x){return x.id===+f.ci;});return c?esc(c.email||c.nombre):'';})())+'">'+
-  '<div id="mfDrop" style="position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:100;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);"></div>'+
+  '<label class="fl">Cliente — email o nombre</label>'+
+  '<input class="fi" id="mfSearch" type="text" placeholder="Escribe para buscar..." autocomplete="off" value="'+searchVal+'">'+
   '<input type="hidden" id="mfCi" value="'+esc(f.ci)+'">'+
+  '<div id="mfDrop" style="position:absolute;top:100%;left:0;right:0;z-index:200;display:none;'+
+  'background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>'+
   '</div>'+
   '<div class="fg"><label class="fl">Fecha de Emisión</label>'+
   '<input class="fi" type="date" id="mfFe" value="'+esc(f.fe)+'"></div></div>'+
@@ -917,7 +951,6 @@ function rMFac(){
   '<button class="btn bp" id="moSave">💾 Guardar Factura</button></div>'+
   '</div></div>';
 }
-
 // ── MODAL PAGAR ───────────────────────────────────────────────
 function rMPag(){
   var f=S.pagarF;var prev=S.pPreview;
@@ -1059,6 +1092,11 @@ function bApp(){
   if(bxl)bxl.onclick=function(){exportarExcel();};
   document.querySelectorAll('[data-filtro]').forEach(function(b){b.onclick=function(){S.mFiltro=b.dataset.filtro;R();};});
   document.querySelectorAll('[data-cf]').forEach(function(b){b.onclick=function(){S.cFiltro=b.dataset.cf;R();};});
+  // Buscadores en tiempo real (sin re-render completo)
+  var clsS=document.getElementById('clsSearch');
+  if(clsS){clsS.oninput=function(){S.cSearch=clsS.value;R();};clsS.onkeydown=function(e){if(e.key==='Escape'){S.cSearch='';R();}};}
+  var facsS=document.getElementById('facsSearch');
+  if(facsS){facsS.oninput=function(){S.fSearch=facsS.value;R();};facsS.onkeydown=function(e){if(e.key==='Escape'){S.fSearch='';R();}};}
   var bnm=document.getElementById('btnNM');
   if(bnm)bnm.onclick=function(){S.modal={tp:'fac'};S.fForm={ci:'',tp:'Mensual',fe:td(),dets:[{si:'',q:'1',p:''}]};R();};
   var bnd=document.getElementById('btnND');
