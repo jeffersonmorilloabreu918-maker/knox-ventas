@@ -73,7 +73,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 
 /* ── SIDEBAR ── */
 .sb{width:220px;min-width:220px;background:var(--sb-bg);border-right:1px solid var(--brd);
-    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+    display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow:hidden;z-index:20;}
+/* El main necesita margen izquierdo para compensar el sidebar fijo */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;margin-left:220px;}
 .logo-bar{padding:16px 18px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;
     background:linear-gradient(135deg,var(--surf) 0%,var(--surf2) 100%);}
 .logo-svg{width:34px;height:34px;flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(59,130,246,.5));}
@@ -124,9 +126,6 @@ nav::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px;}
 /* Online badge */
 .online-dot{width:8px;height:8px;background:var(--grn);border-radius:50%;border:2px solid var(--surf2);
     position:absolute;bottom:0;right:0;animation:pls 2s infinite;}
-
-/* ── MAIN ── */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;}
 
 /* ── TOPBAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;
@@ -330,8 +329,9 @@ tbody tr:hover td{background:rgba(255,255,255,.03);}
 
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .sb{width:0;min-width:0;overflow:hidden;border:none;position:fixed;z-index:50;transition:.25s;}
+  .sb{width:0;min-width:0;overflow:hidden;border:none;transition:.25s;left:0;}
   .sb.open{width:220px;min-width:220px;box-shadow:4px 0 24px rgba(0,0,0,.5);}
+  .main{margin-left:0;}
   .kgrid{grid-template-columns:repeat(2,1fr);}
   .g2{grid-template-columns:1fr;}
   .sg{grid-template-columns:repeat(2,1fr);}
@@ -1102,7 +1102,6 @@ function bModal(){
 
 // ── EXPORTAR EXCEL ────────────────────────────────────────────
 function exportarExcel(){
-  // Cargamos SheetJS dinámicamente si no está disponible
   function doExport(){
     var XLSX=window.XLSX;
     var k=calcK();
@@ -1111,7 +1110,6 @@ function exportarExcel(){
     var per=S.per;
     var perLabel=ml(per)+' ('+per+')';
 
-    // ── Datos ventas por servicio ──
     var ventas=svcs.map(function(s){
       var d=svc[s.codigo]||{q:0,tot:0,cob:0};
       return{
@@ -1128,83 +1126,34 @@ function exportarExcel(){
     var totCob=ventas.reduce(function(a,r){return a+r.Cobrado_RD;},0);
     var totPend=ventas.reduce(function(a,r){return a+r.Pendiente_RD;},0);
     var totPct=totFact>0?Math.round(totCob*100/totFact):0;
-    ventas.push({Servicio:'TOTAL',Unidades:totUds,Facturado_RD:totFact,Cobrado_RD:totCob,Pendiente_RD:totPend,Pct_Cobro:totPct});
 
-    // ── Instrucciones CSV ──
-    var instrucciones=[
-      {Instrucciones:'KNOX VENTAS - Instrucciones de importacion'},
-      {Instrucciones:''},
-      {Instrucciones:'OPCION 1: Power BI Desktop'},
-      {Instrucciones:'  1. Abre Power BI Desktop'},
-      {Instrucciones:'  2. Clic en Obtener datos > Excel'},
-      {Instrucciones:'  3. Selecciona este archivo'},
-      {Instrucciones:'  4. Marca la hoja Ventas_CSV y clic Cargar'},
-      {Instrucciones:'  5. Arrastra los campos al lienzo'},
-      {Instrucciones:''},
-      {Instrucciones:'OPCION 2: Google Sheets'},
-      {Instrucciones:'  1. Abre sheets.google.com'},
-      {Instrucciones:'  2. Archivo > Importar > Subir este archivo'},
-      {Instrucciones:'  3. Selecciona la hoja Ventas_CSV'},
-      {Instrucciones:'  4. Usa Insertar > Grafico para visualizar'},
-      {Instrucciones:''},
-      {Instrucciones:'OPCION 3: CSV puro'},
-      {Instrucciones:'  1. En Excel: Archivo > Guardar como > CSV UTF-8'},
-      {Instrucciones:'  2. En Power BI: Obtener datos > Texto/CSV'},
-      {Instrucciones:'  3. Delimitador: Coma | Codificacion: UTF-8'},
-      {Instrucciones:''},
-      {Instrucciones:'CAMPOS DISPONIBLES:'},
-      {Instrucciones:'  Servicio       Nombre del servicio GPS'},
-      {Instrucciones:'  Unidades       Cantidad vendida en el periodo'},
-      {Instrucciones:'  Facturado_RD   Monto facturado (numerico)'},
-      {Instrucciones:'  Cobrado_RD     Monto cobrado (numerico)'},
-      {Instrucciones:'  Pendiente_RD   Monto pendiente (numerico)'},
-      {Instrucciones:'  Pct_Cobro      Porcentaje cobrado (0 a 100)'},
-    ];
-
-    // ── Crear workbook ──
-    var wb=XLSX.utils.book_new();
-
-    // Hoja 1: Dashboard
-    var dashData=[
-      ['KNOX VENTAS - VENTAS DEL PERIODO: '+perLabel],
+    // ── Hoja única: Ventas del período ──
+    var data=[
+      ['KNOX VENTAS - VENTAS: '+perLabel],
       ['Exportado: '+new Date().toLocaleDateString('es-DO')],
       [],
       ['SERVICIO','UNIDADES','FACTURADO RD$','COBRADO RD$','PENDIENTE RD$','% COBRO']
     ];
     ventas.forEach(function(r){
-      dashData.push([r.Servicio,r.Unidades,r.Facturado_RD,r.Cobrado_RD,r.Pendiente_RD,r.Pct_Cobro]);
+      data.push([r.Servicio,r.Unidades,r.Facturado_RD,r.Cobrado_RD,r.Pendiente_RD,r.Pct_Cobro]);
     });
-    var ws1=XLSX.utils.aoa_to_sheet(dashData);
-    // Anchos de columna
-    ws1['!cols']=[{wch:30},{wch:12},{wch:18},{wch:18},{wch:18},{wch:12}];
-    // Merge para el título
-    ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
-    XLSX.utils.book_append_sheet(wb,ws1,'Dashboard');
+    data.push(['TOTAL',totUds,totFact,totCob,totPend,totPct]);
 
-    // Hoja 2: Ventas_CSV (datos puros para Power BI)
-    var ws2=XLSX.utils.json_to_sheet(ventas);
-    ws2['!cols']=[{wch:28},{wch:12},{wch:16},{wch:16},{wch:16},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws2,'Ventas_CSV');
-
-    // Hoja 3: Instrucciones (separada y limpia)
-    var ws3=XLSX.utils.json_to_sheet(instrucciones);
-    ws3['!cols']=[{wch:60}];
-    XLSX.utils.book_append_sheet(wb,ws3,'Instrucciones');
-
-    // Descargar como .xlsx (formato real, no XML)
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(data);
+    ws['!cols']=[{wch:30},{wch:12},{wch:18},{wch:18},{wch:18},{wch:12}];
+    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+    XLSX.utils.book_append_sheet(wb,ws,'Ventas '+per);
     XLSX.writeFile(wb,'KnoxVentas_'+per+'.xlsx');
     S.toast={m:'Reporte exportado: KnoxVentas_'+per+'.xlsx',c:'var(--grn)'};
     R();
   }
-
-  // Cargar SheetJS si no está cargado
-  if(window.XLSX){
-    doExport();
-  }else{
+  if(window.XLSX){doExport();}
+  else{
     var sc=document.createElement('script');
     sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
     sc.onload=function(){doExport();};
-    sc.onerror=function(){alert('Error cargando librería Excel. Verifica tu conexión a internet.');};
+    sc.onerror=function(){alert('Error cargando libreria Excel. Verifica tu conexion a internet.');};
     document.head.appendChild(sc);
   }
 }
