@@ -1092,189 +1092,220 @@ function bModal(){
   }
 }
 
-// ── EXPORTAR EXCEL ────────────────────────────────────────────
-// Genera un archivo .xls con todas las secciones del dashboard
-// usando el formato XML Spreadsheet compatible con Excel
+// ── EXPORTAR EXCEL — 2 hojas: Dashboard + CSV Ventas ────────
 function exportarExcel(){
   var k=calcK();
   var svc=calcSvc();
   var svcs=S.svcs.length?S.svcs:SVCS_DEF;
   var periodo=ml(S.per)+' ('+S.per+')';
-  var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
+  var fecha=new Date().toLocaleDateString('es-DO');
 
-  // ── Helpers de celda ──
-  function cel(v,t,sty){
-    t=t||'String';sty=sty?'ss:StyleID="'+sty+'"':'';
-    return '<Cell '+sty+'><Data ss:Type="'+t+'">'+(v===null||v===undefined?'':String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</Data></Cell>';
-  }
-  function hd(v){return cel(v,'String','hdr');}
-  function num(v){return cel(v,'Number','num');}
-  function row(){var cells=Array.prototype.slice.call(arguments);return '<Row>'+cells.join('')+'</Row>';}
-  function title(v,cols){return '<Row><Cell ss:MergeAcross="'+(cols-1)+'" ss:StyleID="title"><Data ss:Type="String">'+v+'</Data></Cell></Row>';}
-  function blank(){return '<Row><Cell><Data ss:Type="String"></Data></Cell></Row>';}
-  function pct(v){return cel((v||0).toFixed(1)+'%','String','num');}
-  function money(v){return cel('RD$'+(Math.round(v||0)).toLocaleString('es-DO'),'String','num');}
-
-  // ─────────────────────────────────────────────────────────────
-  // HOJA 1: RESUMEN (Dashboard)
-  // ─────────────────────────────────────────────────────────────
-  var sh1='<Worksheet ss:Name="Resumen '+S.per+'"><Table>'+
-  // Estilos ya definidos — encabezado
-  title('KNOX VENTAS — Resumen del Período: '+periodo,2)+
-  blank()+
-  title('KPIs PRINCIPALES',2)+
-  row(hd('Indicador'),hd('Valor'))+
-  row(cel('Total Facturado'),money(k.tot))+
-  row(cel('Total Cobrado'),money(k.cob))+
-  row(cel('Por Cobrar'),money(k.pend))+
-  row(cel('Total Facturas'),cel(k.totF,'Number'))+
-  row(cel('Facturas Pagadas'),cel(k.pag,'Number'))+
-  row(cel('Facturas Pendientes'),cel(k.totF-k.pag,'Number'))+
-  row(cel('% de Pago'),pct(k.pct))+
-  row(cel('Nuevos Masters'),cel(k.nm,'Number'))+
-  blank()+
-  title('SERVICIOS VENDIDOS EN '+periodo.toUpperCase(),4)+
-  row(hd('Servicio'),hd('Unidades Vendidas'),hd('Total Facturado'),hd('Total Cobrado'))+
-  svcs.map(function(s){
+  // ── Calcular datos por servicio ──────────────────────────────
+  var rows=svcs.map(function(s){
     var d=svc[s.codigo]||{q:0,tot:0,cob:0};
-    return row(cel(s.nombre),cel(d.q,'Number'),money(d.tot),money(d.cob));
-  }).join('')+
-  '</Table></Worksheet>';
-
-  // ─────────────────────────────────────────────────────────────
-  // HOJA 2: FACTURAS
-  // ─────────────────────────────────────────────────────────────
-  var facRows=S.fcs.map(function(fc){
-    var cl=fc.clientes||(cm[fc.cliente_id])||{nombre:'—',empresa:''};
-    return row(
-      cel(fc.numero_factura),
-      cel(cl.nombre||'—'),
-      cel(cl.empresa||''),
-      cel(fc.tipo_factura),
-      cel(fc.fecha_emision),
-      cel(fc.periodo_servicio),
-      cel(fc.estado),
-      money(fc.total),
-      cel(fc.fecha_pago||''),
-      cel(fc.url_comprobante?'Sí':'No')
-    );
-  }).join('');
-
-  var sh2='<Worksheet ss:Name="Facturas"><Table>'+
-  title('FACTURAS — '+periodo,10)+
-  blank()+
-  row(hd('N° Factura'),hd('Cliente'),hd('Empresa'),hd('Tipo'),hd('Fecha Emisión'),hd('Período'),hd('Estado'),hd('Total'),hd('Fecha Pago'),hd('Comprobante'))+
-  (facRows||row(cel('Sin facturas en este período')))+
-  blank()+
-  row(hd('TOTAL FACTURADO'),money(k.tot))+
-  row(hd('TOTAL COBRADO'),money(k.cob))+
-  row(hd('TOTAL PENDIENTE'),money(k.pend))+
-  '</Table></Worksheet>';
-
-  // ─────────────────────────────────────────────────────────────
-  // HOJA 3: CLIENTES
-  // ─────────────────────────────────────────────────────────────
-  var deudaC=function(id){return S.fcs.filter(function(f){return f.cliente_id===id&&f.estado==='Pendiente';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);};
-  var clRows=S.cls.filter(function(c){return !c.es_general;}).map(function(c){
-    var d=deudaC(c.id);
-    var facC=S.fcs.filter(function(f){return f.cliente_id===c.id;});
-    var totC=facC.reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
-    var pagC=facC.filter(function(f){return f.estado==='Pagada';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
-    var pctC=totC>0?Math.round(pagC*100/totC):0;
-    return row(
-      cel(c.nombre),cel(c.empresa||''),cel(c.email||''),cel(c.telefono||''),
-      cel(c.estado),money(d),cel(pctC+'%'),
-      cel(facC.length,'Number'),money(totC),(c.creado_en||'').substring(0,10)
-    );
-  }).join('');
-
-  var sh3='<Worksheet ss:Name="Clientes"><Table>'+
-  title('CLIENTES — '+periodo,10)+
-  blank()+
-  row(hd('Nombre'),hd('Empresa'),hd('Email'),hd('Teléfono'),hd('Estado'),hd('Deuda Pendiente'),hd('% Cumplimiento'),hd('Total Facturas'),hd('Total Facturado'),hd('Creado'))+
-  (clRows||row(cel('Sin clientes')))+
-  '</Table></Worksheet>';
-
-  // ─────────────────────────────────────────────────────────────
-  // HOJA 4: MOROSIDAD
-  // ─────────────────────────────────────────────────────────────
-  var morData=[];
-  S.fcs.filter(function(f){return f.estado==='Pendiente';}).forEach(function(f){
-    var c=cm[f.cliente_id];if(!c||c.estado!=='Activo'||c.es_general)return;
-    var existing=morData.find(function(m){return m.id===f.cliente_id;});
-    if(existing){existing.fcs++;existing.tot+=parseFloat(f.total)||0;}
-    else morData.push({id:f.cliente_id,nombre:c.nombre,empresa:c.empresa||'',fcs:1,tot:parseFloat(f.total)||0});
+    return{
+      nombre:s.nombre,
+      uds:d.q,
+      facturado:Math.round(d.tot),
+      cobrado:Math.round(d.cob),
+      pendiente:Math.round(d.tot-d.cob),
+      pct:d.tot>0?Math.round(d.cob*100/d.tot):0
+    };
   });
-  morData.sort(function(a,b){return b.tot-a.tot;});
 
-  var sh4='<Worksheet ss:Name="Morosidad"><Table>'+
-  title('MOROSIDAD — '+periodo,5)+
-  blank()+
-  row(hd('Cliente'),hd('Empresa'),hd('Facturas Pendientes'),hd('Total Deuda'),hd('Nivel de Riesgo'))+
-  (morData.length===0?row(cel('Sin morosidad en este período')):
-  morData.map(function(m){
-    var riesgo=m.tot>10000?'ALTO':m.tot>5000?'MEDIO':'BAJO';
-    return row(cel(m.nombre),cel(m.empresa),cel(m.fcs,'Number'),money(m.tot),cel(riesgo));
-  }).join(''))+
-  blank()+
-  row(hd('TOTAL DEUDA MOROSA'),money(morData.reduce(function(s,m){return s+m.tot;},0)))+
-  '</Table></Worksheet>';
+  var totUds=rows.reduce(function(a,r){return a+r.uds;},0);
+  var totFact=rows.reduce(function(a,r){return a+r.facturado;},0);
+  var totCob=rows.reduce(function(a,r){return a+r.cobrado;},0);
+  var totPend=rows.reduce(function(a,r){return a+r.pendiente;},0);
+  var totPct=totFact>0?Math.round(totCob*100/totFact):0;
 
-  // ─────────────────────────────────────────────────────────────
-  // HOJA 5: RANKING
-  // ─────────────────────────────────────────────────────────────
-  var rankData=S.cls.filter(function(c){return !c.es_general;}).map(function(c){
-    var ff=S.fcs.filter(function(f){return f.cliente_id===c.id;});
-    var tot=ff.reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
-    var pag=ff.filter(function(f){return f.estado==='Pagada';}).reduce(function(s,f){return s+(parseFloat(f.total)||0);},0);
-    var pct=tot>0?Math.round(pag*100/tot):0;
-    return{nombre:c.nombre,empresa:c.empresa||'',tot:tot,pag:pag,pend:tot-pag,pct:pct};
-  }).sort(function(a,b){return b.pct-a.pct;});
+  // ── Helpers XML ──────────────────────────────────────────────
+  function xs(v){return String(v===null||v===undefined?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function C(v,type,style,span){
+    var a='';
+    if(style)a+=' ss:StyleID="'+style+'"';
+    if(span)a+=' ss:MergeAcross="'+span+'"';
+    return '<Cell'+a+'><Data ss:Type="'+(type||'String')+'">'+xs(v)+'</Data></Cell>';
+  }
+  function CE(style,span){
+    var a=style?' ss:StyleID="'+style+'"':'';
+    if(span)a+=' ss:MergeAcross="'+span+'"';
+    return '<Cell'+a+'><Data ss:Type="String"></Data></Cell>';
+  }
+  function Row(h){var cells=Array.prototype.slice.call(arguments,1);return '<Row ss:Height="'+h+'">'+cells.join('')+'</Row>';}
+  function money(n){return 'RD$'+n.toLocaleString('es-DO');}
 
-  var sh5='<Worksheet ss:Name="Ranking Clientes"><Table>'+
-  title('RANKING DE CLIENTES — '+periodo,6)+
-  blank()+
-  row(hd('#'),hd('Cliente'),hd('Empresa'),hd('Total Pagado'),hd('Total Facturado'),hd('% Cumplimiento'))+
-  (rankData.length===0?row(cel('Sin datos')):
-  rankData.map(function(r,i){
-    return row(cel(i+1,'Number'),cel(r.nombre),cel(r.empresa),money(r.pag),money(r.tot),pct(r.pct));
-  }).join(''))+
-  '</Table></Worksheet>';
-
-  // ─────────────────────────────────────────────────────────────
-  // ESTILOS XLS
-  // ─────────────────────────────────────────────────────────────
-  var styles='<Styles>'+
-  '<Style ss:ID="title"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="13" ss:Color="#1e3a5f"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#3b82f6"/></Borders></Style>'+
-  '<Style ss:ID="hdr"><Font ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#93c5fd"/></Borders></Style>'+
-  '<Style ss:ID="num"><Alignment ss:Horizontal="Right"/><Font ss:Size="11"/></Style>'+
+  // ── ESTILOS ──────────────────────────────────────────────────
+  var STYLES='<Styles>'+
+    '<Style ss:ID="tit"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="20" ss:Color="#FFFFFF"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="sub"><Font ss:Name="Calibri" ss:Size="12" ss:Color="#93c5fd"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="sec"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1e40af"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#3b82f6"/></Borders></Style>'+
+    '<Style ss:ID="hdr"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="All" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
+    '<Style ss:ID="hdr_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="All" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
+    '<Style ss:ID="rA"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
+    '<Style ss:ID="rB"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/></Borders></Style>'+
+    '<Style ss:ID="rA_r"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
+    '<Style ss:ID="rB_r"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/></Borders></Style>'+
+    '<Style ss:ID="tot_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#93c5fd"/></Borders></Style>'+
+    '<Style ss:ID="tot_r"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#93c5fd"/></Borders></Style>'+
+    '<Style ss:ID="pct_hi"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#15803d" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="pct_md"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#b45309" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="pct_lo"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#b91c1c" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="sp"><Interior ss:Color="#0f172a" ss:Pattern="Solid"/></Style>'+
+    '<Style ss:ID="sp2"><Interior ss:Color="#f1f5f9" ss:Pattern="Solid"/></Style>'+
+    // Instrucciones CSV
+    '<Style ss:ID="i_tit"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#FFFFFF"/><Interior ss:Color="#0f4c81" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="i_sec"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1e40af"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="i_txt"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f0f9ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bae6fd"/></Borders></Style>'+
+    '<Style ss:ID="i_cod"><Font ss:Name="Courier New" ss:Size="10" ss:Color="#1d4ed8"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#93c5fd"/></Borders></Style>'+
+    '<Style ss:ID="i_bul"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#0369a1"/><Interior ss:Color="#e0f2fe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
+    '<Style ss:ID="i_blank"><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/></Style>'+
   '</Styles>';
 
-  // ─────────────────────────────────────────────────────────────
-  // ARMAR XML FINAL
-  // ─────────────────────────────────────────────────────────────
-  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>'+
-  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '+
-  'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" '+
-  'xmlns:x="urn:schemas-microsoft-com:office:excel">'+
+  // ── HOJA 1: DASHBOARD estilo Power BI ─────────────────────────
+  // Columnas: sp | Nombre(280) | sp | Uds(90) | sp | Facturado(140) | sp | Cobrado(140) | sp | Pendiente(140) | sp | %Cobro(80) | sp
+  var COLS1='<Column ss:Width="16"/><Column ss:Width="280"/><Column ss:Width="16"/><Column ss:Width="90"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="80"/><Column ss:Width="16"/>';
+  // 13 columnas → MergeAcross=11 para span full (cols 0-12 = 13 celdas, span=11 desde col 1)
+
+  var dash_rows=rows.map(function(r,i){
+    var even=i%2===0;
+    var rL=even?'rA':'rB';
+    var rR=even?'rA_r':'rB_r';
+    var pSty=r.pct>=75?'pct_hi':r.pct>=50?'pct_md':'pct_lo';
+    return Row(20,
+      CE('sp'),C(r.nombre,'String',rL),CE('sp'),
+      C(r.uds,'Number',rR),CE('sp'),
+      C(money(r.facturado),'String',rR),CE('sp'),
+      C(money(r.cobrado),'String',rR),CE('sp'),
+      C(money(r.pendiente),'String',rR),CE('sp'),
+      C(r.pct+'%','String',pSty),CE('sp')
+    );
+  }).join('');
+
+  var sh1='<Worksheet ss:Name="Dashboard"><Table>'+COLS1+
+  Row(30,CE('sp'),C('KNOX VENTAS  —  VENTAS DEL PERÍODO','String','tit',10),CE('sp'))+
+  Row(20,CE('sp'),C('Período: '+periodo+'   |   Fecha de exportación: '+fecha,'String','sub',10),CE('sp'))+
+  Row(10,CE('sp'),CE('sp',10),CE('sp'))+
+  Row(18,CE('sp'),C('VENTAS POR SERVICIO — '+S.per,'String','sec',10),CE('sp'))+
+  Row(4,CE('sp'),CE('sp',10),CE('sp'))+
+  Row(22,
+    CE('sp'),C('SERVICIO','String','hdr_l'),CE('sp'),
+    C('UNIDADES','String','hdr'),CE('sp'),
+    C('FACTURADO','String','hdr'),CE('sp'),
+    C('COBRADO','String','hdr'),CE('sp'),
+    C('PENDIENTE','String','hdr'),CE('sp'),
+    C('% COBRO','String','hdr'),CE('sp')
+  )+
+  dash_rows+
+  Row(24,
+    CE('sp'),C('TOTAL','String','tot_l'),CE('sp'),
+    C(totUds,'Number','tot_r'),CE('sp'),
+    C(money(totFact),'String','tot_r'),CE('sp'),
+    C(money(totCob),'String','tot_r'),CE('sp'),
+    C(money(totPend),'String','tot_r'),CE('sp'),
+    C(totPct+'%','String','tot_r'),CE('sp')
+  )+
+  Row(10,CE('sp'),CE('sp',10),CE('sp'))+
+  Row(16,CE('sp'),C('Knox Ventas · by Jefferson Morillo · Los datos se basan en la fecha de emision de factura.','String','sub',10),CE('sp'))+
+  '</Table></Worksheet>';
+
+  // ── HOJA 2: VENTAS CSV + INSTRUCCIONES ────────────────────────
+  // Columnas: Instrucciones(480) | gap(20) | Servicio(220) | Uds(90) | Facturado(130) | Cobrado(130) | Pendiente(130) | Pct(70)
+  var COLS2='<Column ss:Width="480"/><Column ss:Width="20"/><Column ss:Width="220"/><Column ss:Width="90"/><Column ss:Width="130"/><Column ss:Width="130"/><Column ss:Width="130"/><Column ss:Width="70"/>';
+
+  // Instrucciones + datos en paralelo
+  var inst=[
+    {t:'tit', v:'INSTRUCCIONES DE IMPORTACION'},
+    {t:'i_blank', v:''},
+    {t:'i_sec', v:'OPCION 1 — Power BI Desktop'},
+    {t:'i_txt', v:'1. Abre Power BI Desktop'},
+    {t:'i_txt', v:'2. Clic en "Obtener datos" > "Excel"'},
+    {t:'i_txt', v:'3. Selecciona este archivo .xls'},
+    {t:'i_txt', v:'4. Marca la hoja "Ventas_CSV" y clic "Cargar"'},
+    {t:'i_txt', v:'5. Arrastra los campos al lienzo para crear graficos'},
+    {t:'i_blank', v:''},
+    {t:'i_sec', v:'OPCION 2 — Google Sheets'},
+    {t:'i_txt', v:'1. Abre sheets.google.com'},
+    {t:'i_txt', v:'2. Archivo > Importar > Subir > selecciona este archivo'},
+    {t:'i_txt', v:'3. Selecciona la hoja "Ventas_CSV"'},
+    {t:'i_txt', v:'4. Usa Insertar > Grafico para visualizar'},
+    {t:'i_blank', v:''},
+    {t:'i_sec', v:'OPCION 3 — Importar como CSV puro'},
+    {t:'i_txt', v:'1. Guarda solo la hoja "Ventas_CSV" como CSV:'},
+    {t:'i_cod', v:'   Archivo > Guardar como > CSV UTF-8'},
+    {t:'i_txt', v:'2. En Power BI: Obtener datos > Texto/CSV'},
+    {t:'i_cod', v:'   Delimitador: Coma   Codificacion: UTF-8'},
+    {t:'i_blank', v:''},
+    {t:'i_sec', v:'CAMPOS DEL CSV'},
+    {t:'i_bul', v:'  Servicio       — Nombre del servicio GPS'},
+    {t:'i_bul', v:'  Unidades       — Cantidad vendida en el periodo'},
+    {t:'i_bul', v:'  Facturado_RD   — Monto facturado (numerico, RD$)'},
+    {t:'i_bul', v:'  Cobrado_RD     — Monto cobrado (numerico, RD$)'},
+    {t:'i_bul', v:'  Pendiente_RD   — Monto pendiente (numerico, RD$)'},
+    {t:'i_bul', v:'  Pct_Cobro      — Porcentaje cobrado (0 a 100)'},
+  ];
+
+  // Cabecera CSV en fila 0 (alineada con primer inst)
+  // Datos CSV desde fila 0 también (datos al lado de instrucciones)
+  var csv_sheet_rows='';
+  var maxR=Math.max(inst.length, rows.length+1);// +1 para cabecera
+  for(var i=0;i<maxR;i++){
+    var ins=inst[i]||{t:'i_blank',v:''};
+    var insCell=C(ins.v,'String',ins.t);
+
+    if(i===0){
+      // Cabecera de datos
+      csv_sheet_rows+=Row(22,insCell,CE('sp2'),
+        C('Servicio','String','hdr_l'),C('Unidades','String','hdr'),
+        C('Facturado_RD','String','hdr'),C('Cobrado_RD','String','hdr'),
+        C('Pendiente_RD','String','hdr'),C('Pct_Cobro','String','hdr'));
+    } else {
+      var di=i-1;// offset -1 por cabecera
+      if(di>=0&&di<rows.length){
+        var r=rows[di];var even=di%2===0;
+        var rL=even?'rA':'rB';var rR=even?'rA_r':'rB_r';
+        csv_sheet_rows+=Row(18,insCell,CE('sp2'),
+          C(r.nombre,'String',rL),C(r.uds,'Number',rR),
+          C(r.facturado,'Number',rR),C(r.cobrado,'Number',rR),
+          C(r.pendiente,'Number',rR),C(r.pct,'Number',rR));
+      } else if(di===rows.length){
+        // Fila total
+        csv_sheet_rows+=Row(22,insCell,CE('sp2'),
+          C('TOTAL','String','tot_l'),C(totUds,'Number','tot_r'),
+          C(totFact,'Number','tot_r'),C(totCob,'Number','tot_r'),
+          C(totPend,'Number','tot_r'),C(totPct,'Number','tot_r'));
+      } else {
+        csv_sheet_rows+=Row(18,insCell,CE('sp2'),CE(),CE(),CE(),CE(),CE(),CE());
+      }
+    }
+  }
+
+  var sh2='<Worksheet ss:Name="Ventas_CSV"><Table>'+COLS2+csv_sheet_rows+'</Table></Worksheet>';
+
+  // ── ARMAR WORKBOOK ──────────────────────────────────────────
+  var xml='<?xml version="1.0" encoding="UTF-8"?>'+
+  '<?mso-application progid="Excel.Sheet"?>'+
+  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'+
+  ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"'+
+  ' xmlns:x="urn:schemas-microsoft-com:office:excel"'+
+  ' xmlns:o="urn:schemas-microsoft-com:office:office">'+
   '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">'+
-  '<Title>Knox Ventas - '+periodo+'</Title>'+
-  '<Author>Knox Ventas by Jefferson Morillo</Author>'+
+  '<Title>Knox Ventas '+S.per+'</Title>'+
+  '<Author>Jefferson Morillo</Author>'+
   '<Created>'+new Date().toISOString()+'</Created>'+
   '</DocumentProperties>'+
-  styles+
-  sh1+sh2+sh3+sh4+sh5+
+  '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">'+
+  '<ActiveSheet>0</ActiveSheet></ExcelWorkbook>'+
+  STYLES+sh1+sh2+
   '</Workbook>';
 
-  // Descargar
-  var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var blob=new Blob(['\uFEFF'+xml],{type:'application/vnd.ms-excel;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url;
-  a.download='KnoxVentas_'+S.per+'.xls';
+  a.href=url;a.download='KnoxVentas_'+S.per+'.xls';
   document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-  S.toast={m:'📊 Excel exportado: KnoxVentas_'+S.per+'.xls',c:'var(--grn)'};
+  S.toast={m:'Reporte exportado: KnoxVentas_'+S.per+'.xls',c:'var(--grn)'};
   R();
 }
 
@@ -1282,3 +1313,4 @@ window.onload = function(){R();};
 </script>
 </body>
 </html>
+
