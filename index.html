@@ -899,10 +899,13 @@ function rMFac(){
   '<div style="display:flex;gap:8px;margin-bottom:16px;">'+
   ['Mensual','Directa'].map(function(t){return '<button class="btn bsm '+(f.tp===t?'bp':'bg')+'" data-ftp="'+t+'" style="flex:1;">'+t+'</button>';}).join('')+'</div>'+
   '<div class="fr">'+
-  '<div class="fg"><label class="fl">Cliente</label>'+
-  '<select class="fi" id="mfCi"><option value="">— Seleccionar —</option>'+
-  S.cls.map(function(c){return '<option value="'+c.id+'"'+(+f.ci===c.id?' selected':'')+'>'+esc(c.nombre)+(c.empresa?' · '+esc(c.empresa):'')+'</option>';}).join('')+
-  '</select></div>'+
+  '<div class="fg" style="position:relative;">'+
+  '<label class="fl">Cliente — buscar por email o nombre</label>'+
+  '<input class="fi" id="mfSearch" type="text" placeholder="Escribe email o nombre..." autocomplete="off"'+
+  ' value="'+(f.ci?(function(){var c=S.cls.find(function(x){return x.id===+f.ci;});return c?esc(c.email||c.nombre):'';})())+'">'+
+  '<div id="mfDrop" style="position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:100;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);"></div>'+
+  '<input type="hidden" id="mfCi" value="'+esc(f.ci)+'">'+
+  '</div>'+
   '<div class="fg"><label class="fl">Fecha de Emisión</label>'+
   '<input class="fi" type="date" id="mfFe" value="'+esc(f.fe)+'"></div></div>'+
   '<div style="font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Servicios / Detalles</div>'+
@@ -1035,6 +1038,7 @@ function recalcTotal(){
 function saveForm(){
   var ci=document.getElementById('mfCi');if(ci)S.fForm.ci=ci.value;
   var fe=document.getElementById('mfFe');if(fe)S.fForm.fe=fe.value;
+  // Also sync search text if client was typed but not selected from dropdown
   S.fForm.dets.forEach(function(d,i){
     var q=document.getElementById('dq'+i);var p=document.getElementById('dp'+i);
     if(q)d.q=q.value;if(p)d.p=p.value;
@@ -1100,6 +1104,47 @@ function bModal(){
     var ad=document.getElementById('addDet');if(ad)ad.onclick=function(){saveForm();S.fForm.dets.push({si:'',q:'1',p:''});R();};
     var mfCi=document.getElementById('mfCi');if(mfCi)mfCi.onchange=function(){S.fForm.ci=mfCi.value;};
     var mfFe=document.getElementById('mfFe');if(mfFe)mfFe.onchange=function(){S.fForm.fe=mfFe.value;};
+    // ── Buscador de cliente por email / nombre ──
+    var mfSearch=document.getElementById('mfSearch');
+    var mfDrop=document.getElementById('mfDrop');
+    var mfHid=document.getElementById('mfCi');
+    if(mfSearch&&mfDrop){
+      var showDrop=function(q){
+        q=q.toLowerCase().trim();
+        if(!q){mfDrop.style.display='none';return;}
+        var matches=S.cls.filter(function(c){
+          return (c.email||'').toLowerCase().indexOf(q)>-1||
+                 (c.nombre||'').toLowerCase().indexOf(q)>-1||
+                 (c.empresa||'').toLowerCase().indexOf(q)>-1;
+        }).slice(0,8);
+        if(!matches.length){
+          mfDrop.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--txt3);">Sin resultados</div>';
+        }else{
+          mfDrop.innerHTML=matches.map(function(c){
+            return '<div class="cli-opt" data-id="'+c.id+'" data-label="'+esc(c.email||c.nombre)+'" '+
+            'style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--brd);font-size:13px;">'+
+            '<div style="font-weight:600;color:var(--txt);">'+esc(c.nombre)+'</div>'+
+            '<div style="font-size:11px;color:var(--txt3);">'+esc(c.email||'')+(c.empresa?' · '+esc(c.empresa):'')+'</div>'+
+            '</div>';
+          }).join('');
+          mfDrop.querySelectorAll('.cli-opt').forEach(function(el){
+            el.onmousedown=function(e){
+              e.preventDefault();
+              S.fForm.ci=el.dataset.id;
+              mfSearch.value=el.dataset.label;
+              if(mfHid)mfHid.value=el.dataset.id;
+              mfDrop.style.display='none';
+            };
+            el.onmouseover=function(){el.style.background='var(--surf2)';};
+            el.onmouseout=function(){el.style.background='';};
+          });
+        }
+        mfDrop.style.display='block';
+      };
+      mfSearch.oninput=function(){showDrop(mfSearch.value);};
+      mfSearch.onfocus=function(){if(mfSearch.value)showDrop(mfSearch.value);};
+      mfSearch.onblur=function(){setTimeout(function(){mfDrop.style.display='none';},200);};
+    }
     save.onclick=function(){
       saveForm();
       var f=S.fForm;
