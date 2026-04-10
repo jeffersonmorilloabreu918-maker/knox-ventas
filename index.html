@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Knox Ventas</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 122'><defs><linearGradient id='p' x1='0%25' y1='0%25' x2='0%25' y2='100%25'><stop offset='0%25' stop-color='%231e40af'/><stop offset='100%25' stop-color='%231e3a8a'/></linearGradient><linearGradient id='k' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2393c5fd'/><stop offset='100%25' stop-color='%233b82f6'/></linearGradient></defs><ellipse cx='50' cy='112' rx='17' ry='5.5' fill='rgba(59,130,246,0.22)'/><path d='M50 5 C25 5 10 22 10 41 C10 65 50 92 50 92 C50 92 90 65 90 41 C90 22 75 5 50 5 Z' fill='url(%23p)' stroke='%233b82f6' stroke-width='3.5'/><rect x='28' y='19' width='9' height='44' rx='2.5' fill='url(%23k)'/><path d='M37 41 L63 19 L72 26 L47 44 Z' fill='url(%23k)'/><path d='M37 41 L47 44 L72 63 L63 70 Z' fill='url(%23k)'/></svg>"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1150,6 +1151,9 @@ function bModal(){
       });
     };
   }
+
+  // CLIENTE
+  if(S.modal.tp==='cli'){
     document.querySelectorAll('[data-cst]').forEach(function(b){b.onclick=function(){S.cForm.st=b.dataset.cst;R();};});
     save.onclick=function(){
       var n=document.getElementById('cN')?document.getElementById('cN').value.trim():'';
