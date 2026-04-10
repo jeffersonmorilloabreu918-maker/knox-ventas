@@ -1100,225 +1100,116 @@ function bModal(){
   }
 }
 
-// ── EXPORTAR EXCEL — 2 hojas: Dashboard + CSV Ventas ────────
+// ── EXPORTAR EXCEL ────────────────────────────────────────────
 function exportarExcel(){
-  var k=calcK();
-  var svc=calcSvc();
-  var svcs=S.svcs.length?S.svcs:SVCS_DEF;
-  var periodo=ml(S.per)+' ('+S.per+')';
-  var fecha=new Date().toLocaleDateString('es-DO');
+  // Cargamos SheetJS dinámicamente si no está disponible
+  function doExport(){
+    var XLSX=window.XLSX;
+    var k=calcK();
+    var svc=calcSvc();
+    var svcs=S.svcs.length?S.svcs:SVCS_DEF;
+    var per=S.per;
+    var perLabel=ml(per)+' ('+per+')';
 
-  // ── Calcular datos por servicio ──────────────────────────────
-  var rows=svcs.map(function(s){
-    var d=svc[s.codigo]||{q:0,tot:0,cob:0};
-    return{
-      nombre:s.nombre,
-      uds:d.q,
-      facturado:Math.round(d.tot),
-      cobrado:Math.round(d.cob),
-      pendiente:Math.round(d.tot-d.cob),
-      pct:d.tot>0?Math.round(d.cob*100/d.tot):0
-    };
-  });
+    // ── Datos ventas por servicio ──
+    var ventas=svcs.map(function(s){
+      var d=svc[s.codigo]||{q:0,tot:0,cob:0};
+      return{
+        Servicio:s.nombre,
+        Unidades:d.q,
+        Facturado_RD:Math.round(d.tot),
+        Cobrado_RD:Math.round(d.cob),
+        Pendiente_RD:Math.round(d.tot-d.cob),
+        Pct_Cobro:d.tot>0?Math.round(d.cob*100/d.tot):0
+      };
+    });
+    var totUds=ventas.reduce(function(a,r){return a+r.Unidades;},0);
+    var totFact=ventas.reduce(function(a,r){return a+r.Facturado_RD;},0);
+    var totCob=ventas.reduce(function(a,r){return a+r.Cobrado_RD;},0);
+    var totPend=ventas.reduce(function(a,r){return a+r.Pendiente_RD;},0);
+    var totPct=totFact>0?Math.round(totCob*100/totFact):0;
+    ventas.push({Servicio:'TOTAL',Unidades:totUds,Facturado_RD:totFact,Cobrado_RD:totCob,Pendiente_RD:totPend,Pct_Cobro:totPct});
 
-  var totUds=rows.reduce(function(a,r){return a+r.uds;},0);
-  var totFact=rows.reduce(function(a,r){return a+r.facturado;},0);
-  var totCob=rows.reduce(function(a,r){return a+r.cobrado;},0);
-  var totPend=rows.reduce(function(a,r){return a+r.pendiente;},0);
-  var totPct=totFact>0?Math.round(totCob*100/totFact):0;
+    // ── Instrucciones CSV ──
+    var instrucciones=[
+      {Instrucciones:'KNOX VENTAS - Instrucciones de importacion'},
+      {Instrucciones:''},
+      {Instrucciones:'OPCION 1: Power BI Desktop'},
+      {Instrucciones:'  1. Abre Power BI Desktop'},
+      {Instrucciones:'  2. Clic en Obtener datos > Excel'},
+      {Instrucciones:'  3. Selecciona este archivo'},
+      {Instrucciones:'  4. Marca la hoja Ventas_CSV y clic Cargar'},
+      {Instrucciones:'  5. Arrastra los campos al lienzo'},
+      {Instrucciones:''},
+      {Instrucciones:'OPCION 2: Google Sheets'},
+      {Instrucciones:'  1. Abre sheets.google.com'},
+      {Instrucciones:'  2. Archivo > Importar > Subir este archivo'},
+      {Instrucciones:'  3. Selecciona la hoja Ventas_CSV'},
+      {Instrucciones:'  4. Usa Insertar > Grafico para visualizar'},
+      {Instrucciones:''},
+      {Instrucciones:'OPCION 3: CSV puro'},
+      {Instrucciones:'  1. En Excel: Archivo > Guardar como > CSV UTF-8'},
+      {Instrucciones:'  2. En Power BI: Obtener datos > Texto/CSV'},
+      {Instrucciones:'  3. Delimitador: Coma | Codificacion: UTF-8'},
+      {Instrucciones:''},
+      {Instrucciones:'CAMPOS DISPONIBLES:'},
+      {Instrucciones:'  Servicio       Nombre del servicio GPS'},
+      {Instrucciones:'  Unidades       Cantidad vendida en el periodo'},
+      {Instrucciones:'  Facturado_RD   Monto facturado (numerico)'},
+      {Instrucciones:'  Cobrado_RD     Monto cobrado (numerico)'},
+      {Instrucciones:'  Pendiente_RD   Monto pendiente (numerico)'},
+      {Instrucciones:'  Pct_Cobro      Porcentaje cobrado (0 a 100)'},
+    ];
 
-  // ── Helpers XML ──────────────────────────────────────────────
-  function xs(v){return String(v===null||v===undefined?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function C(v,type,style,span){
-    var a='';
-    if(style)a+=' ss:StyleID="'+style+'"';
-    if(span)a+=' ss:MergeAcross="'+span+'"';
-    return '<Cell'+a+'><Data ss:Type="'+(type||'String')+'">'+xs(v)+'</Data></Cell>';
-  }
-  function CE(style,span){
-    var a=style?' ss:StyleID="'+style+'"':'';
-    if(span)a+=' ss:MergeAcross="'+span+'"';
-    return '<Cell'+a+'><Data ss:Type="String"></Data></Cell>';
-  }
-  function Row(h){var cells=Array.prototype.slice.call(arguments,1);return '<Row ss:Height="'+h+'">'+cells.join('')+'</Row>';}
-  function money(n){var s=Math.abs(Math.round(n||0));var r="";var sc=s.toString();for(var ci=sc.length-1,cc=0;ci>=0;ci--,cc++){if(cc>0&&cc%3===0)r=","+r;r=sc[ci]+r;}return (n<0?"-":"")+"RD$"+r;}
+    // ── Crear workbook ──
+    var wb=XLSX.utils.book_new();
 
-  // ── ESTILOS ──────────────────────────────────────────────────
-  var STYLES='<Styles>'+
-    '<Style ss:ID="tit"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="20" ss:Color="#FFFFFF"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="sub"><Font ss:Name="Calibri" ss:Size="12" ss:Color="#93c5fd"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="sec"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1e40af"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#3b82f6"/></Borders></Style>'+
-    '<Style ss:ID="hdr"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
-    '<Style ss:ID="hdr_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
-    '<Style ss:ID="rA"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
-    '<Style ss:ID="rB"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/></Borders></Style>'+
-    '<Style ss:ID="rA_r"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
-    '<Style ss:ID="rB_r"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/></Borders></Style>'+
-    '<Style ss:ID="tot_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#93c5fd"/></Borders></Style>'+
-    '<Style ss:ID="tot_r"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#93c5fd"/></Borders></Style>'+
-    '<Style ss:ID="pct_hi"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#15803d" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="pct_md"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#b45309" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="pct_lo"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#b91c1c" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="sp"><Interior ss:Color="#0f172a" ss:Pattern="Solid"/></Style>'+
-    '<Style ss:ID="sp2"><Interior ss:Color="#f1f5f9" ss:Pattern="Solid"/></Style>'+
-    // Instrucciones CSV
-    '<Style ss:ID="i_tit"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="13" ss:Color="#FFFFFF"/><Interior ss:Color="#0f4c81" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="i_sec"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1e40af"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="i_txt"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f0f9ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bae6fd"/></Borders></Style>'+
-    '<Style ss:ID="i_cod"><Font ss:Name="Courier New" ss:Size="10" ss:Color="#1d4ed8"/><Interior ss:Color="#dbeafe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#93c5fd"/></Borders></Style>'+
-    '<Style ss:ID="i_bul"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#0369a1"/><Interior ss:Color="#e0f2fe" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>'+
-    '<Style ss:ID="i_blank"><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/></Style>'+
-  '</Styles>';
+    // Hoja 1: Dashboard
+    var dashData=[
+      ['KNOX VENTAS - VENTAS DEL PERIODO: '+perLabel],
+      ['Exportado: '+new Date().toLocaleDateString('es-DO')],
+      [],
+      ['SERVICIO','UNIDADES','FACTURADO RD$','COBRADO RD$','PENDIENTE RD$','% COBRO']
+    ];
+    ventas.forEach(function(r){
+      dashData.push([r.Servicio,r.Unidades,r.Facturado_RD,r.Cobrado_RD,r.Pendiente_RD,r.Pct_Cobro]);
+    });
+    var ws1=XLSX.utils.aoa_to_sheet(dashData);
+    // Anchos de columna
+    ws1['!cols']=[{wch:30},{wch:12},{wch:18},{wch:18},{wch:18},{wch:12}];
+    // Merge para el título
+    ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+    XLSX.utils.book_append_sheet(wb,ws1,'Dashboard');
 
-  // ── HOJA 1: DASHBOARD estilo Power BI ─────────────────────────
-  // Columnas: sp | Nombre(280) | sp | Uds(90) | sp | Facturado(140) | sp | Cobrado(140) | sp | Pendiente(140) | sp | %Cobro(80) | sp
-  var COLS1='<Column ss:Width="16"/><Column ss:Width="280"/><Column ss:Width="16"/><Column ss:Width="90"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="140"/><Column ss:Width="16"/><Column ss:Width="80"/><Column ss:Width="16"/>';
-  // 13 columnas → MergeAcross=11 para span full (cols 0-12 = 13 celdas, span=11 desde col 1)
+    // Hoja 2: Ventas_CSV (datos puros para Power BI)
+    var ws2=XLSX.utils.json_to_sheet(ventas);
+    ws2['!cols']=[{wch:28},{wch:12},{wch:16},{wch:16},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws2,'Ventas_CSV');
 
-  var dash_rows=rows.map(function(r,i){
-    var even=i%2===0;
-    var rL=even?'rA':'rB';
-    var rR=even?'rA_r':'rB_r';
-    var pSty=r.pct>=75?'pct_hi':r.pct>=50?'pct_md':'pct_lo';
-    return Row(20,
-      CE('sp'),C(r.nombre,'String',rL),CE('sp'),
-      C(r.uds,'Number',rR),CE('sp'),
-      C(money(r.facturado),'String',rR),CE('sp'),
-      C(money(r.cobrado),'String',rR),CE('sp'),
-      C(money(r.pendiente),'String',rR),CE('sp'),
-      C(r.pct+'%','String',pSty),CE('sp')
-    );
-  }).join('');
+    // Hoja 3: Instrucciones (separada y limpia)
+    var ws3=XLSX.utils.json_to_sheet(instrucciones);
+    ws3['!cols']=[{wch:60}];
+    XLSX.utils.book_append_sheet(wb,ws3,'Instrucciones');
 
-  var sh1='<Worksheet ss:Name="Dashboard"><Table>'+COLS1+
-  Row(30,CE('sp'),C('KNOX VENTAS  —  VENTAS DEL PERÍODO','String','tit',10),CE('sp'))+
-  Row(20,CE('sp'),C('Período: '+periodo+'   |   Fecha de exportación: '+fecha,'String','sub',10),CE('sp'))+
-  Row(10,CE('sp'),CE('sp',10),CE('sp'))+
-  Row(18,CE('sp'),C('VENTAS POR SERVICIO — '+S.per,'String','sec',10),CE('sp'))+
-  Row(4,CE('sp'),CE('sp',10),CE('sp'))+
-  Row(22,
-    CE('sp'),C('SERVICIO','String','hdr_l'),CE('sp'),
-    C('UNIDADES','String','hdr'),CE('sp'),
-    C('FACTURADO','String','hdr'),CE('sp'),
-    C('COBRADO','String','hdr'),CE('sp'),
-    C('PENDIENTE','String','hdr'),CE('sp'),
-    C('% COBRO','String','hdr'),CE('sp')
-  )+
-  dash_rows+
-  Row(24,
-    CE('sp'),C('TOTAL','String','tot_l'),CE('sp'),
-    C(totUds,'Number','tot_r'),CE('sp'),
-    C(money(totFact),'String','tot_r'),CE('sp'),
-    C(money(totCob),'String','tot_r'),CE('sp'),
-    C(money(totPend),'String','tot_r'),CE('sp'),
-    C(totPct+'%','String','tot_r'),CE('sp')
-  )+
-  Row(10,CE('sp'),CE('sp',10),CE('sp'))+
-  Row(16,CE('sp'),C('Knox Ventas · by Jefferson Morillo · Los datos se basan en la fecha de emision de factura.','String','sub',10),CE('sp'))+
-  '</Table></Worksheet>';
-
-  // ── HOJA 2: VENTAS CSV + INSTRUCCIONES ────────────────────────
-  // Columnas: Instrucciones(480) | gap(20) | Servicio(220) | Uds(90) | Facturado(130) | Cobrado(130) | Pendiente(130) | Pct(70)
-  var COLS2='<Column ss:Width="480"/><Column ss:Width="20"/><Column ss:Width="220"/><Column ss:Width="90"/><Column ss:Width="130"/><Column ss:Width="130"/><Column ss:Width="130"/><Column ss:Width="70"/>';
-
-  // Instrucciones + datos en paralelo
-  var inst=[
-    {t:'tit', v:'INSTRUCCIONES DE IMPORTACION'},
-    {t:'i_blank', v:''},
-    {t:'i_sec', v:'OPCION 1 — Power BI Desktop'},
-    {t:'i_txt', v:'1. Abre Power BI Desktop'},
-    {t:'i_txt', v:'2. Clic en "Obtener datos" > "Excel"'},
-    {t:'i_txt', v:'3. Selecciona este archivo .xls'},
-    {t:'i_txt', v:'4. Marca la hoja "Ventas_CSV" y clic "Cargar"'},
-    {t:'i_txt', v:'5. Arrastra los campos al lienzo para crear graficos'},
-    {t:'i_blank', v:''},
-    {t:'i_sec', v:'OPCION 2 — Google Sheets'},
-    {t:'i_txt', v:'1. Abre sheets.google.com'},
-    {t:'i_txt', v:'2. Archivo > Importar > Subir > selecciona este archivo'},
-    {t:'i_txt', v:'3. Selecciona la hoja "Ventas_CSV"'},
-    {t:'i_txt', v:'4. Usa Insertar > Grafico para visualizar'},
-    {t:'i_blank', v:''},
-    {t:'i_sec', v:'OPCION 3 — Importar como CSV puro'},
-    {t:'i_txt', v:'1. Guarda solo la hoja "Ventas_CSV" como CSV:'},
-    {t:'i_cod', v:'   Archivo > Guardar como > CSV UTF-8'},
-    {t:'i_txt', v:'2. En Power BI: Obtener datos > Texto/CSV'},
-    {t:'i_cod', v:'   Delimitador: Coma   Codificacion: UTF-8'},
-    {t:'i_blank', v:''},
-    {t:'i_sec', v:'CAMPOS DEL CSV'},
-    {t:'i_bul', v:'  Servicio       — Nombre del servicio GPS'},
-    {t:'i_bul', v:'  Unidades       — Cantidad vendida en el periodo'},
-    {t:'i_bul', v:'  Facturado_RD   — Monto facturado (numerico, RD$)'},
-    {t:'i_bul', v:'  Cobrado_RD     — Monto cobrado (numerico, RD$)'},
-    {t:'i_bul', v:'  Pendiente_RD   — Monto pendiente (numerico, RD$)'},
-    {t:'i_bul', v:'  Pct_Cobro      — Porcentaje cobrado (0 a 100)'},
-  ];
-
-  // Cabecera CSV en fila 0 (alineada con primer inst)
-  // Datos CSV desde fila 0 también (datos al lado de instrucciones)
-  var csv_sheet_rows='';
-  var maxR=Math.max(inst.length, rows.length+1);// +1 para cabecera
-  for(var i=0;i<maxR;i++){
-    var ins=inst[i]||{t:'i_blank',v:''};
-    var insCell=C(ins.v,'String',ins.t);
-
-    if(i===0){
-      // Cabecera de datos
-      csv_sheet_rows+=Row(22,insCell,CE('sp2'),
-        C('Servicio','String','hdr_l'),C('Unidades','String','hdr'),
-        C('Facturado_RD','String','hdr'),C('Cobrado_RD','String','hdr'),
-        C('Pendiente_RD','String','hdr'),C('Pct_Cobro','String','hdr'));
-    } else {
-      var di=i-1;// offset -1 por cabecera
-      if(di>=0&&di<rows.length){
-        var r=rows[di];var even=di%2===0;
-        var rL=even?'rA':'rB';var rR=even?'rA_r':'rB_r';
-        csv_sheet_rows+=Row(18,insCell,CE('sp2'),
-          C(r.nombre,'String',rL),C(r.uds,'Number',rR),
-          C(r.facturado,'Number',rR),C(r.cobrado,'Number',rR),
-          C(r.pendiente,'Number',rR),C(r.pct,'Number',rR));
-      } else if(di===rows.length){
-        // Fila total
-        csv_sheet_rows+=Row(22,insCell,CE('sp2'),
-          C('TOTAL','String','tot_l'),C(totUds,'Number','tot_r'),
-          C(totFact,'Number','tot_r'),C(totCob,'Number','tot_r'),
-          C(totPend,'Number','tot_r'),C(totPct,'Number','tot_r'));
-      } else {
-        csv_sheet_rows+=Row(18,insCell,CE('sp2'),CE(),CE(),CE(),CE(),CE(),CE());
-      }
-    }
+    // Descargar como .xlsx (formato real, no XML)
+    XLSX.writeFile(wb,'KnoxVentas_'+per+'.xlsx');
+    S.toast={m:'Reporte exportado: KnoxVentas_'+per+'.xlsx',c:'var(--grn)'};
+    R();
   }
 
-  var sh2='<Worksheet ss:Name="Ventas_CSV"><Table>'+COLS2+csv_sheet_rows+'</Table></Worksheet>';
-
-  // ── ARMAR WORKBOOK ──────────────────────────────────────────
-  var xml='<?xml version="1.0" encoding="UTF-8"?>'+
-  '<?mso-application progid="Excel.Sheet"?>'+
-  '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'+
-  ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"'+
-  ' xmlns:x="urn:schemas-microsoft-com:office:excel"'+
-  ' xmlns:o="urn:schemas-microsoft-com:office:office">'+
-  '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">'+
-  '<Title>Knox Ventas '+S.per+'</Title>'+
-  '<Author>Jefferson Morillo</Author>'+
-  '<Created>'+new Date().toISOString()+'</Created>'+
-  '</DocumentProperties>'+
-  '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">'+
-  '<ActiveSheet>0</ActiveSheet></ExcelWorkbook>'+
-  STYLES+sh1+sh2+
-  '</Workbook>';
-
-  var blob=new Blob(['\uFEFF'+xml],{type:'application/vnd.ms-excel;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='KnoxVentas_'+S.per+'.xls';
-  document.body.appendChild(a);a.click();
-  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-  S.toast={m:'Reporte exportado: KnoxVentas_'+S.per+'.xls',c:'var(--grn)'};
-  R();
+  // Cargar SheetJS si no está cargado
+  if(window.XLSX){
+    doExport();
+  }else{
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=function(){doExport();};
+    sc.onerror=function(){alert('Error cargando librería Excel. Verifica tu conexión a internet.');};
+    document.head.appendChild(sc);
+  }
 }
 
 window.onload = function(){R();};
 </script>
 </body>
 </html>
-
