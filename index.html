@@ -357,32 +357,40 @@ var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 
 // Logo SVG puro - formas geométricas sin texto (100% compatible cross-browser)
 // Pin GPS con K formada por paths, no por text element
-var LOGO_SVG = '<svg class="login-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><defs><linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#0d6efd"/></linearGradient><linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7b5fff"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient><linearGradient id="lg3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a1f35"/><stop offset="100%" stop-color="#0d1525"/></linearGradient></defs>' +
-// Sombra/base pin
-'<ellipse cx="50" cy="108" rx="14" ry="4" fill="rgba(0,229,255,0.25)"/>' +
-// Cuerpo del pin (forma de gota) - relleno oscuro
-'<path d="M50 8 C28 8 14 22 14 40 C14 60 50 88 50 88 C50 88 86 60 86 40 C86 22 72 8 50 8 Z" fill="url(#lg3)" stroke="url(#lg1)" stroke-width="4"/>' +
-// Anillo exterior del círculo del pin
-'<circle cx="50" cy="40" r="24" fill="none" stroke="url(#lg1)" stroke-width="2.5" opacity="0.5"/>' +
-// Letra K formada por paths geométricos
-// Trazo vertical izquierdo de la K
-'<rect x="31" y="22" width="7" height="36" rx="2" fill="url(#lg2)"/>' +
-// Brazo superior de la K (diagonal hacia arriba-derecha)
-'<path d="M38 40 L60 22 L67 27 L45 42 Z" fill="url(#lg2)"/>' +
-// Brazo inferior de la K (diagonal hacia abajo-derecha)
-'<path d="M38 40 L45 42 L67 59 L60 64 Z" fill="url(#lg2)"/>' +
-// Brillo superior del pin
-'<ellipse cx="42" cy="28" rx="8" ry="5" fill="rgba(255,255,255,0.08)" transform="rotate(-20,42,28)"/>' +
-// Chevron decorativo en la punta
-'<path d="M42 76 L50 82 L58 76" fill="none" stroke="url(#lg1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>' +
+// Logo SVG - pin GPS con K en azul #3b82f6 (mismo que botones)
+var LOGO_SVG = '<svg class="login-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 122">'+
+'<defs>'+
+'<linearGradient id="lgPin" x1="0%" y1="0%" x2="0%" y2="100%">'+
+'<stop offset="0%" stop-color="#1e40af"/><stop offset="100%" stop-color="#1e3a8a"/>'+
+'</linearGradient>'+
+'<linearGradient id="lgK" x1="0%" y1="0%" x2="100%" y2="100%">'+
+'<stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#3b82f6"/>'+
+'</linearGradient>'+
+'<filter id="fglow"><feGaussianBlur stdDeviation="1.8" result="b"/>'+
+'<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
+'</defs>'+
+'<ellipse cx="50" cy="112" rx="17" ry="5.5" fill="rgba(59,130,246,0.22)"/>'+
+'<path d="M50 5 C25 5 10 22 10 41 C10 65 50 92 50 92 C50 92 90 65 90 41 C90 22 75 5 50 5 Z" fill="url(#lgPin)" stroke="#3b82f6" stroke-width="3.5"/>'+
+'<rect x="28" y="19" width="9" height="44" rx="2.5" fill="url(#lgK)" filter="url(#fglow)"/>'+
+'<path d="M37 41 L63 19 L72 26 L47 44 Z" fill="url(#lgK)" filter="url(#fglow)"/>'+
+'<path d="M37 41 L47 44 L72 63 L63 70 Z" fill="url(#lgK)" filter="url(#fglow)"/>'+
+'<path d="M42 80 L50 87 L58 80" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
 '</svg>';
 
-var LOGO_MINI = '<svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><defs><linearGradient id="mlg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#0d6efd"/></linearGradient><linearGradient id="mlg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7b5fff"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient><linearGradient id="mlg3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a1f35"/><stop offset="100%" stop-color="#0d1525"/></linearGradient></defs>' +
-'<ellipse cx="50" cy="108" rx="14" ry="4" fill="rgba(0,229,255,0.2)"/>' +
-'<path d="M50 8 C28 8 14 22 14 40 C14 60 50 88 50 88 C50 88 86 60 86 40 C86 22 72 8 50 8 Z" fill="url(#mlg3)" stroke="url(#mlg1)" stroke-width="4"/>' +
-'<rect x="31" y="22" width="7" height="36" rx="2" fill="url(#mlg2)"/>' +
-'<path d="M38 40 L60 22 L67 27 L45 42 Z" fill="url(#mlg2)"/>' +
-'<path d="M38 40 L45 42 L67 59 L60 64 Z" fill="url(#mlg2)"/>' +
+var LOGO_MINI = '<svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 122">'+
+'<defs>'+
+'<linearGradient id="mgPin" x1="0%" y1="0%" x2="0%" y2="100%">'+
+'<stop offset="0%" stop-color="#1e40af"/><stop offset="100%" stop-color="#1e3a8a"/>'+
+'</linearGradient>'+
+'<linearGradient id="mgK" x1="0%" y1="0%" x2="100%" y2="100%">'+
+'<stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#3b82f6"/>'+
+'</linearGradient>'+
+'</defs>'+
+'<ellipse cx="50" cy="112" rx="17" ry="5.5" fill="rgba(59,130,246,0.22)"/>'+
+'<path d="M50 5 C25 5 10 22 10 41 C10 65 50 92 50 92 C50 92 90 65 90 41 C90 22 75 5 50 5 Z" fill="url(#mgPin)" stroke="#3b82f6" stroke-width="3.5"/>'+
+'<rect x="28" y="19" width="9" height="44" rx="2.5" fill="url(#mgK)"/>'+
+'<path d="M37 41 L63 19 L72 26 L47 44 Z" fill="url(#mgK)"/>'+
+'<path d="M37 41 L47 44 L72 63 L63 70 Z" fill="url(#mgK)"/>'+
 '</svg>';
 
 // ── SERVICIOS ─────────────────────────────────────────────────
@@ -1133,15 +1141,15 @@ function exportarExcel(){
     return '<Cell'+a+'><Data ss:Type="String"></Data></Cell>';
   }
   function Row(h){var cells=Array.prototype.slice.call(arguments,1);return '<Row ss:Height="'+h+'">'+cells.join('')+'</Row>';}
-  function money(n){return 'RD$'+n.toLocaleString('es-DO');}
+  function money(n){var s=Math.abs(Math.round(n||0));var r="";var sc=s.toString();for(var ci=sc.length-1,cc=0;ci>=0;ci--,cc++){if(cc>0&&cc%3===0)r=","+r;r=sc[ci]+r;}return (n<0?"-":"")+"RD$"+r;}
 
   // ── ESTILOS ──────────────────────────────────────────────────
   var STYLES='<Styles>'+
     '<Style ss:ID="tit"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="20" ss:Color="#FFFFFF"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
     '<Style ss:ID="sub"><Font ss:Name="Calibri" ss:Size="12" ss:Color="#93c5fd"/><Interior ss:Color="#1e3a8a" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>'+
     '<Style ss:ID="sec"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#1e40af"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#3b82f6"/></Borders></Style>'+
-    '<Style ss:ID="hdr"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="All" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
-    '<Style ss:ID="hdr_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="All" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
+    '<Style ss:ID="hdr"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
+    '<Style ss:ID="hdr_l"><Font ss:Name="Calibri" ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1e40af" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1e40af"/></Borders></Style>'+
     '<Style ss:ID="rA"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
     '<Style ss:ID="rB"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#eff6ff" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bfdbfe"/></Borders></Style>'+
     '<Style ss:ID="rA_r"><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/><Interior ss:Color="#f8fafc" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e2e8f0"/></Borders></Style>'+
