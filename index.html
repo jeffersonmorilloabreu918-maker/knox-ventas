@@ -708,7 +708,7 @@ function rFacs(){
   var vacio='<tr><td colspan="9" style="text-align:center;color:var(--txt3);padding:26px;">Sin facturas en este período</td></tr>';
   var filas=f.length===0?vacio:f.map(function(fc){
     var cl=fc.clientes||(cm[fc.cliente_id])||{nombre:'—',empresa:''};
-    var comp=fc.url_comprobante?'<button class="compbtn" data-lb="'+esc(fc.url_comprobante)+'">🖼️ Ver</button>':'<span style="font-size:11px;color:var(--txt3);">—</span>';
+    var comp=fc.url_comprobante?'<button class="compbtn" data-lb="'+esc(fc.url_comprobante)+'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Ver</button>':'<span style="font-size:11px;color:var(--txt3);">—</span>';
     return '<tr>'+
     '<td><span style="font-family:monospace;font-size:11px;color:var(--acc);">'+esc(fc.numero_factura)+'</span></td>'+
     '<td><div style="font-weight:700;">'+esc(cl.nombre||'—')+'</div><div style="font-size:11px;color:var(--txt3);">'+esc(cl.empresa||'')+'</div></td>'+
@@ -719,7 +719,8 @@ function rFacs(){
     '<td><span class="chip '+(fc.estado==='Pagada'?'cg':'cy')+'">'+(fc.estado==='Pagada'?'Pagada':'Pendiente')+'</span>'+(fc.fecha_pago?'<div style="font-size:10px;color:var(--txt3);margin-top:2px;">Pago: '+esc(fc.fecha_pago)+'</div>':'')+'</td>'+
     '<td>'+comp+'</td>'+
     '<td><div style="display:flex;gap:4px;flex-wrap:wrap;">'+
-    (fc.estado==='Pendiente'?'<button class="btn bgrn bsm" data-pagar="'+fc.id+'">Pagar</button>':'')+
+    (fc.estado==='Pendiente'?'<button class="btn bgrn bsm" data-pagar="'+fc.id+'">Pagar</button>':
+     (!fc.url_comprobante?'<button class="btn bg bsm" data-subir="'+fc.id+'" title="Subir comprobante" style="color:var(--ylw);border-color:var(--ylw);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>':''))+
     '<button class="btn bg bsm" data-ver="'+fc.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>'+
     '</div></td></tr>';
   }).join('');
@@ -807,7 +808,32 @@ function rModal(){
   if(m.tp==='pag')return rMPag();
   if(m.tp==='cli')return rMCli();
   if(m.tp==='det')return rMDet();
+  if(m.tp==='comp')return rMComp();
   return '';
+}
+
+// ── MODAL SUBIR COMPROBANTE (factura ya pagada) ────────────────
+function rMComp(){
+  var f=S.pagarF;var prev=S.pPreview;
+  return '<div class="mb" id="mbg"><div class="mo" style="max-width:460px;">'+
+  '<div class="mo-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ylw)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir Comprobante</div>'+
+  '<div style="background:var(--surf2);border-radius:10px;padding:14px;margin-bottom:16px;border:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;">'+
+  '<div><div style="font-size:11px;color:var(--txt3);">Factura</div>'+
+  '<div style="font-weight:800;font-size:14px;color:var(--acc);">'+esc(f.numero_factura)+'</div>'+
+  '<div style="font-size:11px;color:var(--txt3);margin-top:2px;">Fecha pago: <b style="color:var(--grn);">'+esc(f.fecha_pago||'—')+'</b></div></div>'+
+  '<div style="text-align:right;"><div style="font-size:11px;color:var(--txt3);">Total</div>'+
+  '<div style="font-size:20px;font-weight:800;color:var(--grn);">'+fmt(f.total)+'</div></div></div>'+
+  '<div class="fg"><label class="fl">Imagen del comprobante</label>'+
+  (prev?
+  '<div class="cpv"><img src="'+esc(prev)+'" alt="preview"><div class="cpvb"><span class="cpvn">'+esc(S.pFileName)+'</span><button class="cpvx" id="remComp">✕ Quitar</button></div></div>':
+  '<div class="uz" id="uzn"><input type="file" id="cmpFile" accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf">'+
+  '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--acc);margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+
+  '<div style="font-size:13px;color:var(--txt3);"><b style="color:var(--acc);">Clic aquí</b> o arrastra la imagen</div>'+
+  '<div style="font-size:11px;color:var(--txt3);margin-top:3px;">PNG · JPG · PDF · máx 10MB</div></div>')+
+  '</div>'+
+  '<div class="fa"><button class="btn bg" id="moCan">Cancelar</button>'+
+  '<button class="btn bp" id="moSave" '+(prev?'':'disabled')+'><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Guardar comprobante</button>'+
+  '</div></div></div>';
 }
 
 // ── MODAL FACTURA ─────────────────────────────────────────────
@@ -1004,6 +1030,10 @@ function bApp(){
   document.querySelectorAll('[data-pagar]').forEach(function(b){
     b.onclick=function(){S.pagarF=S.fcs.find(function(f){return f.id===+b.dataset.pagar;});S.pFecha=td();S.pFile=null;S.pFileName='';S.pPreview=null;S.modal={tp:'pag'};R();};
   });
+  // Subir comprobante a factura ya pagada
+  document.querySelectorAll('[data-subir]').forEach(function(b){
+    b.onclick=function(){S.pagarF=S.fcs.find(function(f){return f.id===+b.dataset.subir;});S.pFile=null;S.pFileName='';S.pPreview=null;S.modal={tp:'comp'};R();};
+  });
   document.querySelectorAll('[data-ver]').forEach(function(b){
     b.onclick=function(){S.verFac=S.fcs.find(function(f){return f.id===+b.dataset.ver;});S.modal={tp:'det'};R();};
   });
@@ -1086,8 +1116,40 @@ function bModal(){
     };
   }
 
-  // CLIENTE
-  if(S.modal.tp==='cli'){
+  // SUBIR COMPROBANTE (factura ya pagada)
+  if(S.modal.tp==='comp'){
+    var loadF2=function(file){
+      if(!file)return;
+      if(file.size>10*1024*1024){alert('Máximo 10MB');return;}
+      S.pFile=file;S.pFileName=file.name;
+      var reader=new FileReader();
+      reader.onload=function(e){S.pPreview=e.target.result;R();bModal();};
+      reader.readAsDataURL(file);
+    };
+    var cfi2=document.getElementById('cmpFile');if(cfi2)cfi2.onchange=function(){loadF2(cfi2.files[0]);};
+    var uzn2=document.getElementById('uzn');
+    if(uzn2){
+      uzn2.ondragover=function(e){e.preventDefault();uzn2.classList.add('drag');};
+      uzn2.ondragleave=function(){uzn2.classList.remove('drag');};
+      uzn2.ondrop=function(e){e.preventDefault();uzn2.classList.remove('drag');loadF2(e.dataTransfer.files[0]);};
+    }
+    var rc2=document.getElementById('remComp');
+    if(rc2)rc2.onclick=function(){S.pFile=null;S.pFileName='';S.pPreview=null;R();bModal();};
+    save.onclick=function(){
+      if(!S.pFile){alert('Selecciona una imagen primero');return;}
+      save.textContent='Subiendo...';save.disabled=true;
+      var ext=S.pFile.name.split('.').pop().toLowerCase();
+      var path=S.pagarF.numero_factura+'_'+Date.now()+'.'+ext;
+      DB.upload(path,S.pFile).then(function(url){
+        if(!url){alert('No se pudo subir el comprobante.\nVerifica Supabase → Storage → Policies.');save.textContent='Guardar comprobante';save.disabled=false;return;}
+        DB.patch('facturas',S.pagarF.id,{url_comprobante:url,actualizado_en:new Date().toISOString()})
+        .then(function(){return cargarFacs();}).then(function(){
+          S.modal=null;S.pPreview=null;
+          S.toast={m:'Comprobante guardado correctamente',c:'var(--grn)'};R();
+        }).catch(function(e){alert('Error: '+e.message);save.textContent='Guardar comprobante';save.disabled=false;});
+      });
+    };
+  }
     document.querySelectorAll('[data-cst]').forEach(function(b){b.onclick=function(){S.cForm.st=b.dataset.cst;R();};});
     save.onclick=function(){
       var n=document.getElementById('cN')?document.getElementById('cN').value.trim():'';
