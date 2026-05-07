@@ -998,43 +998,127 @@ function rMCli(){
 function rMDet(){
   var fac=S.verFac;if(!fac)return '';
   var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
-  var cl=fac.clientes||(cm[fac.cliente_id])||{nombre:'—',empresa:''};
+  var cl=fac.clientes||(cm[fac.cliente_id])||{nombre:'—',empresa:'',email:'',telefono:''};
   var dets=S.dets[fac.id]||[];
-  var dRows=dets.length===0?'<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:14px;">Sin detalles</td></tr>':
+
+  // Empresa fija (KnoxTrack)
+  var empresa={
+    nombre:'KnoxTrack SRL',
+    email:'soporte@knoxtrack.com',
+    tel:'18494996329'
+  };
+
+  // Calcular totales
+  var subtotal=fac.total;
+  var total=fac.total;
+
+  // Filas de detalles
+  var dRows=dets.length===0?
+  '<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:14px;">Sin detalles</td></tr>':
   dets.map(function(d){
     var sNom=d.servicios&&d.servicios.nombre?d.servicios.nombre:'—';
-    return '<tr><td style="font-weight:600;">'+esc(sNom)+'</td>'+
-    '<td style="text-align:center;">'+esc(d.cantidad)+'</td>'+
-    '<td>'+fmt(d.precio_unitario)+'</td>'+
-    '<td style="font-weight:800;color:var(--acc);">'+fmt(d.subtotal)+'</td></tr>';
+    return '<tr style="border-bottom:1px solid var(--brd);">'+
+    '<td style="padding:12px 14px;">'+esc(sNom)+'</td>'+
+    '<td style="padding:12px 14px;text-align:center;font-weight:700;">'+esc(d.cantidad)+'</td>'+
+    '<td style="padding:12px 14px;">'+fmt(d.precio_unitario)+'</td>'+
+    '<td style="padding:12px 14px;font-weight:800;color:var(--txt);">'+fmt(d.subtotal)+'</td>'+
+    '</tr>';
   }).join('');
-  return '<div class="mb" id="mbg"><div class="mo">'+
-  '<div class="mo-t">🔍 Detalle de Factura</div>'+
-  '<div class="det-fac-hdr">'+
-  '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">'+
-  '<div>'+
-  '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">N° Factura</div>'+
-  '<div style="font-weight:800;font-size:16px;color:var(--acc);">'+esc(fac.numero_factura)+'</div>'+
-  '<div style="margin-top:10px;">'+
-  '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Cliente</div>'+
-  '<div style="font-weight:700;font-size:14px;">'+esc(cl.nombre)+'</div>'+
-  (cl.empresa?'<div style="font-size:12px;color:var(--txt3);">'+esc(cl.empresa)+'</div>':'')+
+
+  // Estado badge con color
+  var estadoBg=fac.estado==='Pagada'?'#16a34a':fac.estado==='Pendiente'?'#d97706':'#6b7280';
+
+  return '<div class="mb" id="mbg"><div class="mo" style="max-width:660px;padding:0;overflow:hidden;">'+
+
+  // ── HEADER con número de factura ──────────────────────────────
+  '<div style="background:var(--acc);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">'+
+  '<div style="font-weight:800;font-size:17px;color:#fff;letter-spacing:-.3px;">Detalle de Factura</div>'+
+  '<div style="font-family:monospace;font-size:14px;font-weight:700;color:#fff;opacity:.9;">'+esc(fac.numero_factura)+'</div>'+
+  '</div>'+
+
+  // ── EMPRESA + CLIENTE ─────────────────────────────────────────
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--brd);">'+
+
+  // Empresa
+  '<div style="padding:20px 24px;border-right:1px solid var(--brd);">'+
+  '<div style="font-weight:800;font-size:14px;color:var(--txt);margin-bottom:10px;">Empresa</div>'+
+  '<div style="font-size:13px;color:var(--txt3);line-height:1.9;">'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Nombre:</span> '+esc(empresa.nombre)+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Email:</span> '+esc(empresa.email)+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Teléfono:</span> '+esc(empresa.tel)+'</div>'+
   '</div></div>'+
-  '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">'+
-  '<span class="chip '+(fac.tipo_factura==='Mensual'?'cb':'cp')+'">'+(fac.tipo_factura==='Mensual'?'🔁 Mensual':'⚡ Directa')+'</span>'+
-  '<span class="chip '+(fac.estado==='Pagada'?'cg':'cy')+'">'+(fac.estado==='Pagada'?'✅ Pagada':'⏳ Pendiente')+'</span>'+
-  '<div style="font-size:11px;color:var(--txt3);">Emisión: '+esc(fac.fecha_emision)+'</div>'+
-  '<div style="font-size:11px;color:var(--txt3);">Período: '+esc(fac.periodo_servicio)+'</div>'+
-  (fac.fecha_pago?'<div style="font-size:11px;color:var(--grn);font-weight:600;">✅ Pagado: '+esc(fac.fecha_pago)+'</div>':'')+
-  '</div></div></div>'+
-  '<table class="det-fac-table">'+
-  '<thead><tr>'+['Servicio','Cant.','Precio Unit.','Subtotal'].map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead>'+
+
+  // Cliente
+  '<div style="padding:20px 24px;">'+
+  '<div style="font-weight:800;font-size:14px;color:var(--txt);margin-bottom:10px;">Cliente</div>'+
+  '<div style="font-size:13px;color:var(--txt3);line-height:1.9;">'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Nombre:</span> '+esc(cl.nombre||'—')+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Email:</span> '+esc(cl.email||'—')+'</div>'+
+  (cl.telefono?'<div><span style="color:var(--txt2);font-weight:600;">Teléfono:</span> '+esc(cl.telefono)+'</div>':'')+
+  '</div></div>'+
+  '</div>'+
+
+  // ── TABLA DETALLES ────────────────────────────────────────────
+  '<div style="padding:20px 24px;border-bottom:1px solid var(--brd);">'+
+  '<div style="font-weight:800;font-size:14px;color:var(--txt);margin-bottom:12px;">Detalles de la Facturación</div>'+
+  '<table style="width:100%;border-collapse:collapse;font-size:13px;">'+
+  '<thead><tr style="background:var(--surf2);">'+
+  '<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3);">Descripción</th>'+
+  '<th style="text-align:center;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3);">Cantidad</th>'+
+  '<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3);">Precio Unitario</th>'+
+  '<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3);">Subtotal</th>'+
+  '</tr></thead>'+
   '<tbody>'+dRows+'</tbody>'+
-  '<tfoot><tr class="det-tot"><td colspan="3" style="text-align:right;font-weight:700;padding:11px 10px;color:var(--txt3);font-size:12px;">TOTAL:</td>'+
-  '<td style="padding:11px 10px;font-weight:800;font-size:18px;color:var(--acc);">'+fmt(fac.total)+'</td></tr></tfoot>'+
-  '</table>'+
-  (fac.url_comprobante?'<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--brd);"><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Comprobante</div><button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'">🖼️ Ver comprobante</button></div>':'')+
-  '<div class="fa"><button class="btn bp" id="moCan">Cerrar</button></div>'+
+  '</table></div>'+
+
+  // ── RESUMEN + TOTALES ─────────────────────────────────────────
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--brd);">'+
+
+  // Resumen servicios
+  '<div style="padding:18px 24px;border-right:1px solid var(--brd);">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Resumen</div>'+
+  '<div style="font-size:12px;color:var(--txt3);line-height:2;">'+
+  (function(){
+    var totalUds=dets.reduce(function(s,d){return s+(parseInt(d.cantidad)||0);},0);
+    var lineas=dets.map(function(d){
+      return '<div>'+esc((d.servicios&&d.servicios.nombre)||'Servicio')+': <b style="color:var(--txt);">'+d.cantidad+'</b></div>';
+    }).join('');
+    return lineas+'<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--brd);"><b style="color:var(--txt);">Total unidades: '+totalUds+'</b></div>';
+  })()+
+  '</div></div>'+
+
+  // Totales
+  '<div style="padding:18px 24px;">'+
+  '<div style="font-size:13px;color:var(--txt3);line-height:2.2;">'+
+  '<div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span style="color:var(--txt);">'+fmt(subtotal)+'</span></div>'+
+  '<div style="display:flex;justify-content:space-between;border-top:2px solid var(--brd);padding-top:6px;margin-top:4px;">'+
+  '<span style="font-weight:800;font-size:14px;color:var(--txt);">Total:</span>'+
+  '<span style="font-weight:800;font-size:14px;color:var(--txt);">'+fmt(total)+'</span></div>'+
+  '</div></div>'+
+  '</div>'+
+
+  // ── OBSERVACIONES ────────────────────────────────────────────
+  '<div style="padding:18px 24px;background:var(--surf2);">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Observaciones</div>'+
+  '<div style="font-size:12px;color:var(--txt3);line-height:2;">'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Número de Factura:</span> '+esc(fac.numero_factura)+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Período:</span> '+esc(fac.periodo_servicio)+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Tipo:</span> '+(fac.tipo_factura==='Mensual'?'Mensual':'Directa')+'</div>'+
+  '<div><span style="color:var(--txt2);font-weight:600;">Fecha de Emisión:</span> '+esc(fac.fecha_emision)+'</div>'+
+  (fac.fecha_pago?'<div><span style="color:var(--txt2);font-weight:600;">Fecha de Pago:</span> '+esc(fac.fecha_pago)+'</div>':'')+
+  '<div style="margin-top:8px;">'+
+  '<span style="background:'+estadoBg+';color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:99px;">'+esc(fac.estado)+'</span>'+
+  '</div>'+
+  '</div></div>'+
+
+  // ── FOOTER ────────────────────────────────────────────────────
+  '<div style="padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--brd);">'+
+  (fac.url_comprobante?
+    '<button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Ver comprobante</button>':
+    '<div></div>')+
+  '<button class="btn bp" id="moCan" style="min-width:100px;">Cerrar</button>'+
+  '</div>'+
+
   '</div></div>';
 }
 
