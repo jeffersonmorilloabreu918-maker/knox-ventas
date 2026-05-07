@@ -334,6 +334,25 @@ tbody tr:hover td{background:rgba(255,255,255,.03);}
 .overlay{display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.5);}
 .overlay.show{display:block;}
 
+/* Fullscreen invoice modal */
+#facDetModal:fullscreen{
+  background:var(--bg)!important;overflow-y:auto;
+  display:flex;align-items:flex-start;justify-content:center;padding:20px;
+}
+#facDetModal:-webkit-full-screen{
+  background:var(--bg)!important;overflow-y:auto;
+  display:flex;align-items:flex-start;justify-content:center;padding:20px;
+}
+
+/* ── PRINT ── */
+@media print{
+  body>*{display:none!important;}
+  #facDetModal{display:block!important;position:fixed;inset:0;z-index:9999;
+    background:#fff!important;color:#000!important;padding:24px;overflow:auto;}
+  #facDetModal *{color:#000!important;background:#fff!important;border-color:#ccc!important;visibility:visible!important;}
+  .btn,.btn-salir,.hamburger,.compbtn,[id="moCan"]{display:none!important;}
+}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .sb{width:0;min-width:0;overflow:hidden;border:none;transition:.3s;left:0;z-index:50;}
@@ -668,7 +687,9 @@ function calcK(){
   var pct=f.length?Math.round(pag*100/f.length):0;
   var act=f.filter(function(x){var c=cm[x.cliente_id];return c&&c.estado==='Activo';});
   var pA=act.filter(function(x){return x.estado==='Pendiente';}).length;
-  var nm=S.cls.filter(function(c){return !c.es_general&&c.creado_en&&c.creado_en.substring(0,7)===S.per;}).length;
+  var nm=S.cls.filter(function(c){
+    return !c.es_general&&c.creado_en&&c.creado_en.substring(0,7)===S.per;
+  }).length;
   return{tot:tot,cob:cob,pend:tot-cob,pct:pct,nm:nm,totF:f.length,pag:pag};
 }
 function calcSvc(){
@@ -998,7 +1019,15 @@ function rMCli(){
 function rMDet(){
   var fac=S.verFac;if(!fac)return '';
   var cm={};S.cls.forEach(function(c){cm[c.id]=c;});
-  var cl=fac.clientes||(cm[fac.cliente_id])||{nombre:'—',empresa:'',email:'',telefono:''};
+  // Bug fix: buscar cliente completo desde S.cls para tener email
+  var clFromList=cm[fac.cliente_id]||null;
+  var clFromFac=fac.clientes||null;
+  var cl={
+    nombre:(clFromFac&&clFromFac.nombre)||(clFromList&&clFromList.nombre)||'—',
+    email: (clFromList&&clFromList.email)||(clFromFac&&clFromFac.email)||'',
+    telefono:(clFromList&&clFromList.telefono)||(clFromFac&&clFromFac.telefono)||'',
+    empresa:(clFromFac&&clFromFac.empresa)||(clFromList&&clFromList.empresa)||''
+  };
   var dets=S.dets[fac.id]||[];
   var empresa={nombre:'KnoxTrack SRL',email:'soporte@knoxtrack.com',tel:'18494996329'};
   var estadoBg=fac.estado==='Pagada'?'#16a34a':'#d97706';
@@ -1007,94 +1036,103 @@ function rMDet(){
   '<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:14px;">Sin detalles</td></tr>':
   dets.map(function(d){
     var sNom=d.servicios&&d.servicios.nombre?d.servicios.nombre:'—';
-    return '<tr>'+
-    '<td style="padding:11px 14px;font-size:13px;">'+esc(sNom)+'</td>'+
-    '<td style="padding:11px 14px;text-align:center;font-size:13px;font-weight:700;">'+esc(d.cantidad)+'</td>'+
-    '<td style="padding:11px 14px;font-size:13px;">'+fmt(d.precio_unitario)+'</td>'+
-    '<td style="padding:11px 14px;font-size:13px;font-weight:700;">'+fmt(d.subtotal)+'</td>'+
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,.05);">'+
+    '<td style="padding:10px 14px;font-size:13px;">'+esc(sNom)+'</td>'+
+    '<td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:700;">'+esc(d.cantidad)+'</td>'+
+    '<td style="padding:10px 14px;font-size:13px;text-align:right;">'+fmt(d.precio_unitario)+'</td>'+
+    '<td style="padding:10px 14px;font-size:13px;font-weight:700;text-align:right;">'+fmt(d.subtotal)+'</td>'+
     '</tr>';
   }).join('');
 
   var totalUds=dets.reduce(function(s,d){return s+(parseInt(d.cantidad)||0);},0);
   var resumeLines=dets.map(function(d){
     var sNom=d.servicios&&d.servicios.nombre?d.servicios.nombre:'Servicio';
-    return '<div style="font-size:12px;color:var(--txt3);margin-bottom:2px;">'+esc(sNom)+': <b style="color:var(--txt2);">'+d.cantidad+'</b></div>';
+    return '<div style="font-size:12px;color:var(--txt3);margin-bottom:3px;">'+esc(sNom)+': <b style="color:var(--txt2);">'+d.cantidad+'</b></div>';
   }).join('');
 
-  // Fecha límite de pago: 15 del mes de emisión, o campo de BD si existe
   var fechaLimite=fac.fecha_limite_pago||'';
   if(!fechaLimite&&fac.fecha_emision){
     var parts=fac.fecha_emision.split('-');
     fechaLimite=parts[0]+'-'+parts[1]+'-15';
   }
 
-  var S_CARD='background:var(--surf2);border-radius:10px;padding:18px 20px;margin-bottom:12px;';
+  var SC='background:var(--surf2);border-radius:10px;padding:16px 18px;margin-bottom:10px;';
   var LBL='font-size:12px;color:var(--txt3);';
-  var VAL='color:var(--txt2);';
+  var VAL='font-weight:600;color:var(--txt2);';
 
-  return '<div class="mb" id="mbg"><div class="mo" style="max-width:640px;padding:0;overflow:hidden;border-radius:14px;">'+
+  // Botones del footer según estado
+  var footerBtns='';
+  if(fac.url_comprobante){
+    footerBtns+='<button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'" style="margin-right:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Ver comprobante</button>';
+  } else if(fac.estado==='Pagada'){
+    footerBtns+='<button class="btn bg bsm" data-subir="'+fac.id+'" style="color:var(--ylw);border-color:var(--ylw);margin-right:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir comprobante</button>';
+  } else if(fac.estado==='Pendiente'){
+    footerBtns+='<button class="btn bgrn bsm" data-pagar="'+fac.id+'" id="moCanPagar" style="margin-right:6px;">💳 Pagar</button>';
+  }
+  // Botón imprimir
+  footerBtns+='<button class="btn bg bsm" onclick="window.print()" style="margin-right:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>';
 
-  // Header azul
-  '<div style="background:var(--acc);padding:15px 22px;display:flex;justify-content:space-between;align-items:center;">'+
-  '<div style="font-weight:800;font-size:16px;color:#fff;">Detalle de Factura</div>'+
+  return '<div class="mb" id="mbg"><div class="mo" id="facDetModal" style="max-width:640px;padding:0;overflow:hidden;border-radius:14px;">'+
+
+  '<div style="background:var(--acc);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">'+
+  '<div style="font-weight:800;font-size:15px;color:#fff;">Detalle de Factura</div>'+
+  '<div style="display:flex;align-items:center;gap:10px;">'+
   '<div style="font-family:monospace;font-size:13px;font-weight:700;color:rgba(255,255,255,.9);">'+esc(fac.numero_factura)+'</div>'+
-  '</div>'+
+  '<button onclick="(function(){var m=document.getElementById(\'facDetModal\');if(!m)return;if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})()" '+
+  'style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;cursor:pointer;border-radius:6px;padding:4px 8px;font-size:11px;display:flex;align-items:center;gap:4px;" title="Pantalla completa">'+
+  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'+
+  'Ampliar</button>'+
+  '</div></div>'+
 
-  '<div style="padding:18px 20px 20px;background:var(--surf);">'+
+  '<div style="padding:16px 18px 18px;background:var(--surf);">'+
 
-  // Empresa + Cliente — grid 2 cols, sin borde entre ellos
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-
-  '<div style="'+S_CARD+'">'+
-  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Empresa</div>'+
+  // Empresa + Cliente
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+  '<div style="'+SC+'margin-bottom:0;">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:8px;">Empresa</div>'+
   '<div style="'+LBL+'line-height:1.9;">'+
   '<div><b style="'+VAL+'">Nombre:</b> '+esc(empresa.nombre)+'</div>'+
   '<div><b style="'+VAL+'">Email:</b> '+esc(empresa.email)+'</div>'+
   '<div><b style="'+VAL+'">Teléfono:</b> '+esc(empresa.tel)+'</div>'+
   '</div></div>'+
-
-  '<div style="'+S_CARD+'">'+
-  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Cliente</div>'+
+  '<div style="'+SC+'margin-bottom:0;">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:8px;">Cliente</div>'+
   '<div style="'+LBL+'line-height:1.9;">'+
-  '<div><b style="'+VAL+'">Nombre:</b> '+esc(cl.nombre||'—')+'</div>'+
-  '<div><b style="'+VAL+'">Email:</b> '+esc(cl.email||'—')+'</div>'+
+  '<div><b style="'+VAL+'">Nombre:</b> '+esc(cl.nombre)+'</div>'+
+  '<div><b style="'+VAL+'">Email:</b> '+esc(cl.email||'No registrado')+'</div>'+
   (cl.telefono?'<div><b style="'+VAL+'">Teléfono:</b> '+esc(cl.telefono)+'</div>':'')+
-  '</div></div>'+
-  '</div>'+
+  '</div></div></div>'+
 
-  // Detalles de la Facturación
-  '<div style="'+S_CARD+'margin-bottom:12px;">'+
-  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:12px;">Detalles de la Facturación</div>'+
+  // Tabla detalles
+  '<div style="'+SC+'">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Detalles de la Facturación</div>'+
   '<table style="width:100%;border-collapse:collapse;">'+
   '<thead><tr style="border-bottom:1px solid var(--brd);">'+
-  '<th style="text-align:left;padding:7px 14px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Descripción</th>'+
-  '<th style="text-align:center;padding:7px 14px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Cantidad</th>'+
-  '<th style="text-align:left;padding:7px 14px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Precio Unitario</th>'+
-  '<th style="text-align:left;padding:7px 14px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Subtotal</th>'+
+  '<th style="text-align:left;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Descripción</th>'+
+  '<th style="text-align:center;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Cantidad</th>'+
+  '<th style="text-align:right;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Precio Unit.</th>'+
+  '<th style="text-align:right;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Subtotal</th>'+
   '</tr></thead>'+
   '<tbody>'+dRows+'</tbody>'+
   '</table></div>'+
 
   // Resumen + Totales
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'+
-
-  '<div style="'+S_CARD+'margin-bottom:0;">'+
-  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Resumen</div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+  '<div style="'+SC+'margin-bottom:0;">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:8px;">Resumen</div>'+
   resumeLines+
   '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--brd);font-size:12px;font-weight:700;color:var(--txt);">Total unidades: '+totalUds+'</div>'+
   '</div>'+
-
-  '<div style="'+S_CARD+'margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end;">'+
-  '<div style="'+LBL+'line-height:2.2;">'+
+  '<div style="'+SC+'margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end;">'+
+  '<div style="'+LBL+'line-height:2.4;">'+
   '<div style="display:flex;justify-content:space-between;font-size:13px;"><span>Subtotal:</span><span style="color:var(--txt2);">'+fmt(fac.total)+'</span></div>'+
-  '<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--txt);border-top:1px solid var(--brd);padding-top:6px;margin-top:4px;">'+
+  '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--txt);border-top:1px solid var(--brd);padding-top:6px;margin-top:4px;">'+
   '<span>Total:</span><span>'+fmt(fac.total)+'</span></div>'+
-  '</div></div>'+
-  '</div>'+
+  '</div></div></div>'+
 
   // Observaciones
-  '<div style="'+S_CARD+'margin-bottom:0;">'+
-  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Observaciones</div>'+
+  '<div style="'+SC+'margin-bottom:0;">'+
+  '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:8px;">Observaciones</div>'+
   '<div style="'+LBL+'line-height:2;">'+
   '<div><b style="'+VAL+'">Número de Factura:</b> '+esc(fac.numero_factura)+'</div>'+
   '<div><b style="'+VAL+'">Período de Facturación:</b> '+esc(fac.periodo_servicio)+'</div>'+
@@ -1105,12 +1143,10 @@ function rMDet(){
   '<span style="background:'+estadoBg+';color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:99px;">'+esc(fac.estado)+'</span>'+
   '</div></div></div>'+
 
-  // Footer
-  '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">'+
-  (fac.url_comprobante?
-  '<button class="compbtn" data-lb="'+esc(fac.url_comprobante)+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Ver comprobante</button>':
-  '<div></div>')+
-  '<button class="btn bp" id="moCan" style="min-width:100px;">Cerrar</button>'+
+  // Footer con botones
+  '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px;">'+
+  '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+footerBtns+'</div>'+
+  '<button class="btn bp" id="moCan" style="min-width:90px;">Cerrar</button>'+
   '</div>'+
 
   '</div></div></div>';
@@ -1189,6 +1225,19 @@ function bApp(){
   document.querySelectorAll('[data-ver]').forEach(function(b){
     b.onclick=function(){S.verFac=S.fcs.find(function(f){return f.id===+b.dataset.ver;});S.modal={tp:'det'};R();};
   });
+  // Pagar desde modal detalle
+  var moCanPagar=document.getElementById('moCanPagar');
+  if(moCanPagar){
+    var fid=+moCanPagar.getAttribute('data-pagar')||(S.verFac&&S.verFac.id);
+    moCanPagar.onclick=function(){
+      S.modal=null;
+      setTimeout(function(){
+        S.pagarF=S.fcs.find(function(f){return f.id===fid;});
+        S.pFecha=td();S.pFile=null;S.pFileName='';S.pPreview=null;
+        S.modal={tp:'pag'};R();
+      },50);
+    };
+  }
   document.querySelectorAll('[data-lb]').forEach(function(b){b.onclick=function(){S.lbox=b.dataset.lb;R();};});
   var lboxEl=document.getElementById('lboxEl');
   if(lboxEl){lboxEl.onclick=function(e){if(e.target===lboxEl||e.target.tagName==='IMG'){S.lbox=null;R();}};var lx=document.getElementById('lboxX');if(lx)lx.onclick=function(){S.lbox=null;R();};}
