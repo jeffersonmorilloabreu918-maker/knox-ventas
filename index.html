@@ -336,12 +336,16 @@ tbody tr:hover td{background:rgba(255,255,255,.03);}
 
 /* Fullscreen invoice modal */
 #facDetModal:fullscreen{
-  background:var(--bg)!important;overflow-y:auto;
-  display:flex;align-items:flex-start;justify-content:center;padding:20px;
+  overflow-y:auto;background:var(--bg)!important;
+  display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;
 }
 #facDetModal:-webkit-full-screen{
-  background:var(--bg)!important;overflow-y:auto;
-  display:flex;align-items:flex-start;justify-content:center;padding:20px;
+  overflow-y:auto;background:var(--bg)!important;
+  display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;
+}
+#facDetModal:fullscreen .mo,
+#facDetModal:-webkit-full-screen .mo{
+  max-width:800px;width:100%;margin:0 auto;
 }
 
 /* ── PRINT ── */
@@ -1037,10 +1041,10 @@ function rMDet(){
   dets.map(function(d){
     var sNom=d.servicios&&d.servicios.nombre?d.servicios.nombre:'—';
     return '<tr style="border-bottom:1px solid rgba(255,255,255,.05);">'+
-    '<td style="padding:10px 14px;font-size:13px;">'+esc(sNom)+'</td>'+
-    '<td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:700;">'+esc(d.cantidad)+'</td>'+
-    '<td style="padding:10px 14px;font-size:13px;text-align:right;">'+fmt(d.precio_unitario)+'</td>'+
-    '<td style="padding:10px 14px;font-size:13px;font-weight:700;text-align:right;">'+fmt(d.subtotal)+'</td>'+
+    '<td style="padding:10px 12px;font-size:13px;word-break:break-word;">'+esc(sNom)+'</td>'+
+    '<td style="padding:10px 12px;text-align:center;font-size:13px;font-weight:700;white-space:nowrap;">'+esc(d.cantidad)+'</td>'+
+    '<td style="padding:10px 12px;font-size:13px;text-align:right;white-space:nowrap;">'+fmt(d.precio_unitario)+'</td>'+
+    '<td style="padding:10px 12px;font-size:13px;font-weight:700;text-align:right;white-space:nowrap;">'+fmt(d.subtotal)+'</td>'+
     '</tr>';
   }).join('');
 
@@ -1072,9 +1076,9 @@ function rMDet(){
   // Botón imprimir
   footerBtns+='<button class="btn bg bsm" onclick="window.print()" style="margin-right:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>';
 
-  return '<div class="mb" id="mbg"><div class="mo" id="facDetModal" style="max-width:640px;padding:0;overflow:hidden;border-radius:14px;">'+
+  return '<div class="mb" id="mbg"><div class="mo" id="facDetModal" style="max-width:660px;padding:0;overflow:hidden;border-radius:14px;width:100%;">'+
 
-  '<div style="background:var(--acc);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">'+
+  '<div style="background:var(--acc);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">'+
   '<div style="font-weight:800;font-size:15px;color:#fff;">Detalle de Factura</div>'+
   '<div style="display:flex;align-items:center;gap:10px;">'+
   '<div style="font-family:monospace;font-size:13px;font-weight:700;color:rgba(255,255,255,.9);">'+esc(fac.numero_factura)+'</div>'+
@@ -1084,7 +1088,7 @@ function rMDet(){
   'Ampliar</button>'+
   '</div></div>'+
 
-  '<div style="padding:16px 18px 18px;background:var(--surf);">'+
+  '<div style="padding:16px 18px 18px;background:var(--surf);overflow-y:auto;max-height:calc(90vh - 60px);">'+
 
   // Empresa + Cliente
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
@@ -1103,18 +1107,20 @@ function rMDet(){
   (cl.telefono?'<div><b style="'+VAL+'">Teléfono:</b> '+esc(cl.telefono)+'</div>':'')+
   '</div></div></div>'+
 
-  // Tabla detalles
+  // Tabla detalles — columnas con width fijo para no cortarse
   '<div style="'+SC+'">'+
   '<div style="font-weight:800;font-size:13px;color:var(--txt);margin-bottom:10px;">Detalles de la Facturación</div>'+
-  '<table style="width:100%;border-collapse:collapse;">'+
+  '<div style="overflow-x:auto;">'+
+  '<table style="width:100%;border-collapse:collapse;min-width:420px;">'+
+  '<colgroup><col style="width:45%"><col style="width:15%"><col style="width:20%"><col style="width:20%"></colgroup>'+
   '<thead><tr style="border-bottom:1px solid var(--brd);">'+
-  '<th style="text-align:left;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Descripción</th>'+
-  '<th style="text-align:center;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Cantidad</th>'+
-  '<th style="text-align:right;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Precio Unit.</th>'+
-  '<th style="text-align:right;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Subtotal</th>'+
+  '<th style="text-align:left;padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Descripción</th>'+
+  '<th style="text-align:center;padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Cant.</th>'+
+  '<th style="text-align:right;padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Precio Unit.</th>'+
+  '<th style="text-align:right;padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);">Subtotal</th>'+
   '</tr></thead>'+
   '<tbody>'+dRows+'</tbody>'+
-  '</table></div>'+
+  '</table></div></div>'+
 
   // Resumen + Totales
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
@@ -1143,7 +1149,7 @@ function rMDet(){
   '<span style="background:'+estadoBg+';color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:99px;">'+esc(fac.estado)+'</span>'+
   '</div></div></div>'+
 
-  // Footer con botones
+  // Footer
   '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px;">'+
   '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+footerBtns+'</div>'+
   '<button class="btn bp" id="moCan" style="min-width:90px;">Cerrar</button>'+
